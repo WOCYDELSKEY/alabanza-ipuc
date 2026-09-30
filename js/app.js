@@ -22,6 +22,8 @@ const supabaseClient = window.supabase.createClient(
 // ============================================================
 
 async function comprobarConexion() {
+    console.log("Intentando conectar con Supabase...");
+    console.log("URL:", SUPABASE_URL);
 
     const { data, error } = await supabaseClient
         .from("integrantes")
@@ -29,13 +31,16 @@ async function comprobarConexion() {
         .limit(1);
 
     if (error) {
-
-        console.error("Error conectando con Supabase:", error);
-
+        console.error("ERROR COMPLETO DE SUPABASE");
+        console.error("Mensaje:", error.message);
+        console.error("Detalles:", error.details);
+        console.error("Hint:", error.hint);
+        console.error("Código:", error.code);
         return false;
     }
 
     console.log("✅ Supabase conectado correctamente");
+    console.log("Datos recibidos:", data);
 
     return true;
 }
