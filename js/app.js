@@ -1,3 +1,50 @@
+// ============================================================
+// CONFIGURACIÓN SUPABASE
+// ============================================================
+
+const SUPABASE_URL = "https://eowvywzafmxjfeqsfzcg.supabase.co/rest/v1/";
+
+const SUPABASE_KEY = "sb_publishable_npJQw6k00asz-E_eYJGs9g_t9HC74kS";
+
+
+// ============================================================
+// CONEXIÓN
+// ============================================================
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
+// ============================================================
+// COMPROBAR CONEXIÓN
+// ============================================================
+
+async function comprobarConexion() {
+
+    const { data, error } = await supabaseClient
+        .from("integrantes")
+        .select("id")
+        .limit(1);
+
+    if (error) {
+
+        console.error("Error conectando con Supabase:", error);
+
+        return false;
+    }
+
+    console.log("✅ Supabase conectado correctamente");
+
+    return true;
+}
+
+
+// ============================================================
+// NAVEGACIÓN TEMPORAL
+// ============================================================
+
 function irA(seccion) {
 
     if (seccion === "cronograma") {
@@ -13,3 +60,14 @@ function irA(seccion) {
     }
 
 }
+
+
+// ============================================================
+// INICIAR APLICACIÓN
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    comprobarConexion();
+
+});
