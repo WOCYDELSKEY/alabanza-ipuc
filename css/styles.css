@@ -1,0 +1,253 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f8;
+    color: #1f2937;
+    min-height: 100vh;
+}
+
+
+/* HEADER */
+
+.header {
+    background: #111827;
+    color: white;
+    padding: 20px;
+}
+
+
+.header-content {
+    max-width: 1100px;
+    margin: auto;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.header h1 {
+    font-size: 25px;
+    margin-bottom: 4px;
+}
+
+
+.header p {
+    color: #cbd5e1;
+}
+
+
+.status {
+    background: #166534;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+
+/* CONTENEDOR */
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+
+/* BIENVENIDA */
+
+.welcome {
+    margin-bottom: 30px;
+}
+
+
+.welcome h2 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+
+.welcome p {
+    color: #64748b;
+}
+
+
+/* TARJETAS */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 20px;
+}
+
+
+.card {
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,0.06);
+}
+
+
+.card-icon {
+    font-size: 35px;
+    margin-bottom: 15px;
+}
+
+
+.card h3 {
+    margin-bottom: 10px;
+}
+
+
+.card p {
+    color: #64748b;
+
+    line-height: 1.5;
+
+    min-height: 70px;
+}
+
+
+button {
+    border: none;
+
+    background: #2563eb;
+
+    color: white;
+
+    padding: 11px 18px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-weight: bold;
+
+    margin-top: 15px;
+}
+
+
+button:hover {
+    background: #1d4ed8;
+}
+
+
+/* PRÓXIMO SERVICIO */
+
+.next-service {
+    background: white;
+
+    margin-top: 30px;
+
+    padding: 25px;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,0.06);
+}
+
+
+.section-title {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 25px;
+}
+
+
+.badge {
+    padding: 7px 12px;
+
+    border-radius: 20px;
+
+    font-size: 13px;
+}
+
+
+.pending {
+    background: #fef3c7;
+
+    color: #92400e;
+}
+
+
+.service-info {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 20px;
+}
+
+
+.service-info div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.service-info span {
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+/* FOOTER */
+
+footer {
+    text-align: center;
+
+    padding: 30px;
+
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+/* MÓVILES */
+
+@media (max-width: 750px) {
+
+    .header-content {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+    }
+
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+
+    .service-info {
+        grid-template-columns: 1fr;
+    }
+
+}
