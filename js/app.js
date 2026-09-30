@@ -2,7 +2,7 @@
 // CONFIGURACIÓN SUPABASE
 // ============================================================
 
-const SUPABASE_URL = "https://eowvywzafmxjfeqsfzcg.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://eowvywzafmxjfeqsfzcg.supabase.co";
 
 const SUPABASE_KEY = "sb_publishable_npJQw6k00asz-E_eYJGs9g_t9HC74kS";
 
