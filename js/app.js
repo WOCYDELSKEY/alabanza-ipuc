@@ -43,13 +43,15 @@ async function comprobarConexion() {
 
 async function generarCronograma() {
 
+    console.clear();
+
     console.log("=================================");
-    console.log("GENERANDO CRONOGRAMA");
+    console.log("GENERADOR DE CRONOGRAMA");
     console.log("=================================");
 
-    // -----------------------------------------------------
-    // 1. OBTENER INTEGRANTES
-    // -----------------------------------------------------
+    // =====================================================
+    // 1. OBTENER DATOS
+    // =====================================================
 
     const { data: integrantes, error: errorIntegrantes } =
         await supabaseClient
@@ -61,10 +63,6 @@ async function generarCronograma() {
         console.error("Error obteniendo integrantes:", errorIntegrantes);
         return;
     }
-
-    // -----------------------------------------------------
-    // 2. OBTENER DISPONIBILIDADES
-    // -----------------------------------------------------
 
     const { data: disponibilidades, error: errorDisponibilidad } =
         await supabaseClient
@@ -78,10 +76,6 @@ async function generarCronograma() {
         );
         return;
     }
-
-    // -----------------------------------------------------
-    // 3. OBTENER SERVICIOS
-    // -----------------------------------------------------
 
     const { data: servicios, error: errorServicios } =
         await supabaseClient
@@ -100,14 +94,58 @@ async function generarCronograma() {
     console.log("Integrantes:", integrantes.length);
     console.log("Servicios:", servicios.length);
 
-    if (servicios.length === 0) {
-        console.warn("No hay servicios disponibles.");
+    if (integrantes.length !== 24) {
+        console.error("❌ Deben existir exactamente 24 integrantes.");
+        return;
+    }
+
+    if (servicios.length !== 14) {
+        console.error("❌ Deben existir exactamente 14 servicios.");
         return;
     }
 
 
     // =====================================================
-    // ESTRUCTURAS AUXILIARES
+    // 2. COMPROBAR SI YA EXISTE UN CRONOGRAMA
+    // =====================================================
+
+    const servicioIds = servicios.map(s => s.id);
+
+    const { data: existentes, error: errorExistentes } =
+        await supabaseClient
+            .from("asignaciones")
+            .select("id, servicio_id")
+            .in("servicio_id", servicioIds);
+
+    if (errorExistentes) {
+        console.error(
+            "Error comprobando asignaciones existentes:",
+            errorExistentes
+        );
+        return;
+    }
+
+    if (existentes.length > 0) {
+
+        console.error(
+            "❌ Ya existen asignaciones para octubre."
+        );
+
+        console.error(
+            "Primero debes eliminarlas desde Supabase antes de regenerar."
+        );
+
+        console.error(
+            "Asignaciones existentes:",
+            existentes.length
+        );
+
+        return;
+    }
+
+
+    // =====================================================
+    // 3. DISPONIBILIDAD
     // =====================================================
 
     const disponibilidad = {};
@@ -123,27 +161,38 @@ async function generarCronograma() {
     });
 
 
-    // Contador de participaciones
+    // =====================================================
+    // 4. CONTADORES
+    // =====================================================
+
     const participaciones = {};
+    const participacionesPorRol = {};
 
     integrantes.forEach(persona => {
+
         participaciones[persona.id] = 0;
+
+        participacionesPorRol[persona.id] = {
+            bateria: 0,
+            bajo: 0,
+            guitarra: 0,
+            piano: 0,
+            lider: 0,
+            coro: 0,
+            auxiliar: 0
+        };
+
     });
 
 
     // =====================================================
-    // FUNCIONES AUXILIARES
+    // 5. FUNCIONES AUXILIARES
     // =====================================================
 
     function diaSemana(fecha) {
 
-        // PostgreSQL y JavaScript usan:
-        // Domingo = 0
-        // Lunes = 1
-        // ...
-        // Sábado = 6
-
-        const fechaLocal = new Date(fecha + "T12:00:00");
+        const fechaLocal =
+            new Date(fecha + "T12:00:00");
 
         return fechaLocal.getDay();
     }
@@ -157,21 +206,17 @@ async function generarCronograma() {
     }
 
 
-    function yaAsignado(persona, asignados) {
+    function estaAsignado(persona, asignados) {
 
         return asignados.some(
-            asignacion => asignacion.integrante_id === persona.id
+            a => a.integrante_id === persona.id
         );
     }
 
 
-    function elegirMenorParticipacion(lista) {
+    function ordenarPorParticipacion(lista) {
 
-        if (lista.length === 0) {
-            return null;
-        }
-
-        lista.sort((a, b) => {
+        return [...lista].sort((a, b) => {
 
             const diferencia =
                 participaciones[a.id] -
@@ -185,13 +230,13 @@ async function generarCronograma() {
                 b.nombre,
                 "es"
             );
+
         });
 
-        return lista[0];
     }
 
 
-    function candidatosPorInstrumento(
+    function obtenerCandidatos(
         instrumento,
         servicio,
         asignados
@@ -203,27 +248,79 @@ async function generarCronograma() {
 
             estaDisponible(persona, servicio) &&
 
-            !yaAsignado(persona, asignados)
+            !estaAsignado(persona, asignados)
 
         );
+
+    }
+
+
+    function registrar(
+        persona,
+        rol,
+        asignados
+    ) {
+
+        asignados.push({
+            integrante_id: persona.id,
+            rol: rol
+        });
+
+        participaciones[persona.id]++;
+
+
+        if (rol === "Batería") {
+            participacionesPorRol[persona.id].bateria++;
+        }
+
+        if (rol === "Bajo") {
+            participacionesPorRol[persona.id].bajo++;
+        }
+
+        if (rol === "Guitarra eléctrica") {
+            participacionesPorRol[persona.id].guitarra++;
+        }
+
+        if (rol === "Piano principal") {
+            participacionesPorRol[persona.id].piano++;
+        }
+
+        if (rol === "Voz líder") {
+            participacionesPorRol[persona.id].lider++;
+        }
+
+        if (rol === "Coro") {
+            participacionesPorRol[persona.id].coro++;
+        }
+
+        if (rol === "Piano auxiliar") {
+            participacionesPorRol[persona.id].auxiliar++;
+        }
+
     }
 
 
     // =====================================================
-    // GENERAR CADA SERVICIO
+    // 6. GENERACIÓN
     // =====================================================
 
     const todasLasAsignaciones = [];
 
+    let errores = [];
 
-    for (const servicio of servicios) {
+
+    for (
+        let indiceServicio = 0;
+        indiceServicio < servicios.length;
+        indiceServicio++
+    ) {
+
+        const servicio = servicios[indiceServicio];
 
         console.log("");
         console.log("---------------------------------");
         console.log(
-            "Servicio:",
-            servicio.fecha,
-            servicio.tipo
+            `${servicio.fecha} - ${servicio.tipo}`
         );
         console.log("---------------------------------");
 
@@ -235,292 +332,340 @@ async function generarCronograma() {
         // BATERÍA
         // =================================================
 
-        let candidatosBateria =
-            candidatosPorInstrumento(
+        let candidatos =
+            obtenerCandidatos(
                 "Batería",
                 servicio,
                 asignados
             );
 
-        const bateria =
-            elegirMenorParticipacion(candidatosBateria);
+        candidatos =
+            ordenarPorParticipacion(candidatos);
+
+        const bateria = candidatos[0];
 
         if (!bateria) {
-            console.error(
-                "❌ No hay baterista disponible para",
-                servicio.fecha
+
+            errores.push(
+                `${servicio.fecha}: no hay baterista disponible`
             );
+
             continue;
         }
 
-        asignados.push({
-            integrante_id: bateria.id,
-            rol: "Batería"
-        });
-
-        participaciones[bateria.id]++;
+        registrar(
+            bateria,
+            "Batería",
+            asignados
+        );
 
 
         // =================================================
-        // BAJO
+        // BAJO + GUITARRA
         // =================================================
-
-        let candidatosBajo =
-            candidatosPorInstrumento(
-                "Bajo",
-                servicio,
-                asignados
-            );
-
-        // Regla:
-        // Johan NO puede tocar con Santiago.
         //
-        // Si elegimos Johan, luego guitarra debe ser Wolfran.
-        // Si elegimos Arquimedes, podemos usar Santiago o Wolfran.
-
-        let bajo;
+        // Se seleccionan como PAREJA.
+        //
+        // Permitidas:
+        //
+        // Arquimedes + Santiago
+        // Arquimedes + Wolfran
+        // Johan + Wolfran
+        //
+        // PROHIBIDA:
+        //
+        // Johan + Santiago
+        // =================================================
 
         const arquimedes =
-            candidatosBajo.find(
+            integrantes.find(
                 p => p.nombre === "Arquimedes Esquivel"
             );
 
         const johan =
-            candidatosBajo.find(
+            integrantes.find(
                 p => p.nombre === "Johan Díaz"
             );
 
+        const wolfran =
+            integrantes.find(
+                p => p.nombre === "Wolfran Castañeda"
+            );
 
-        // Intentamos balancear entre ambos
-        bajo = elegirMenorParticipacion(
-            candidatosBajo
+        const santiago =
+            integrantes.find(
+                p => p.nombre === "Santiago Mendoza"
+            );
+
+
+        const parejas = [];
+
+
+        // Arquimedes + Santiago
+        if (
+            arquimedes &&
+            santiago &&
+            estaDisponible(arquimedes, servicio) &&
+            estaDisponible(santiago, servicio)
+        ) {
+
+            parejas.push({
+                bajo: arquimedes,
+                guitarra: santiago
+            });
+
+        }
+
+
+        // Arquimedes + Wolfran
+        if (
+            arquimedes &&
+            wolfran &&
+            estaDisponible(arquimedes, servicio) &&
+            estaDisponible(wolfran, servicio)
+        ) {
+
+            parejas.push({
+                bajo: arquimedes,
+                guitarra: wolfran
+            });
+
+        }
+
+
+        // Johan + Wolfran
+        if (
+            johan &&
+            wolfran &&
+            estaDisponible(johan, servicio) &&
+            estaDisponible(wolfran, servicio)
+        ) {
+
+            parejas.push({
+                bajo: johan,
+                guitarra: wolfran
+            });
+
+        }
+
+
+        if (parejas.length === 0) {
+
+            errores.push(
+                `${servicio.fecha}: no existe pareja válida de bajo y guitarra`
+            );
+
+            continue;
+        }
+
+
+        // Elegimos la pareja con menor participación
+        parejas.sort((a, b) => {
+
+            const totalA =
+                participaciones[a.bajo.id] +
+                participaciones[a.guitarra.id];
+
+            const totalB =
+                participaciones[b.bajo.id] +
+                participaciones[b.guitarra.id];
+
+            return totalA - totalB;
+
+        });
+
+
+        const pareja = parejas[0];
+
+
+        registrar(
+            pareja.bajo,
+            "Bajo",
+            asignados
         );
 
-        if (!bajo) {
-            console.error(
-                "❌ No hay bajista disponible para",
-                servicio.fecha
-            );
-            continue;
-        }
-
-        asignados.push({
-            integrante_id: bajo.id,
-            rol: "Bajo"
-        });
-
-        participaciones[bajo.id]++;
-
-
-        // =================================================
-        // GUITARRA
-        // =================================================
-
-        let candidatosGuitarra =
-            candidatosPorInstrumento(
-                "Guitarra eléctrica",
-                servicio,
-                asignados
-            );
-
-
-        // Regla fundamental:
-        //
-        // Johan + Santiago = PROHIBIDO
-        //
-        // Si el bajista es Johan:
-        //     guitarra = Wolfran
-        //
-        // Si el bajista es Arquimedes:
-        //     puede ser Santiago o Wolfran.
-
-        if (bajo.nombre === "Johan Díaz") {
-
-            candidatosGuitarra =
-                candidatosGuitarra.filter(
-                    p => p.nombre === "Wolfran Castañeda"
-                );
-
-        }
-
-
-        const guitarra =
-            elegirMenorParticipacion(
-                candidatosGuitarra
-            );
-
-
-        if (!guitarra) {
-
-            console.error(
-                "❌ No existe combinación válida Bajo/Guitarra para",
-                servicio.fecha
-            );
-
-            continue;
-        }
-
-
-        asignados.push({
-            integrante_id: guitarra.id,
-            rol: "Guitarra eléctrica"
-        });
-
-        participaciones[guitarra.id]++;
+        registrar(
+            pareja.guitarra,
+            "Guitarra eléctrica",
+            asignados
+        );
 
 
         // =================================================
         // VOZ LÍDER
         // =================================================
 
-        let candidatosLider =
+        let lideres =
             integrantes.filter(persona =>
 
                 persona.puede_ser_lider === true &&
 
-                persona.instrumento === "Voz líder" ||
-
-                (
-                    persona.puede_ser_lider === true &&
-                    persona.instrumento === "Piano"
-                )
-
-            );
-
-
-        candidatosLider =
-            candidatosLider.filter(persona =>
-
                 estaDisponible(persona, servicio) &&
 
-                !yaAsignado(persona, asignados)
+                !estaAsignado(persona, asignados)
 
             );
 
 
-        const lider =
-            elegirMenorParticipacion(
-                candidatosLider
-            );
+        // Primero buscamos quien tenga menos servicios
+        // como líder, no menos participaciones totales.
+
+        lideres.sort((a, b) => {
+
+            const diferencia =
+                participacionesPorRol[a.id].lider -
+                participacionesPorRol[b.id].lider;
+
+            if (diferencia !== 0) {
+                return diferencia;
+            }
+
+            return participaciones[a.id] -
+                participaciones[b.id];
+
+        });
+
+
+        const lider = lideres[0];
 
 
         if (!lider) {
 
-            console.error(
-                "❌ No hay líder disponible para",
-                servicio.fecha
+            errores.push(
+                `${servicio.fecha}: no hay líder disponible`
             );
 
             continue;
         }
 
 
-        asignados.push({
-            integrante_id: lider.id,
-            rol: "Voz líder"
-        });
-
-        participaciones[lider.id]++;
+        registrar(
+            lider,
+            "Voz líder",
+            asignados
+        );
 
 
         // =================================================
         // PIANO PRINCIPAL
         // =================================================
 
-        let candidatosPiano =
-            candidatosPorInstrumento(
+        let pianos =
+            obtenerCandidatos(
                 "Piano",
                 servicio,
                 asignados
             );
 
 
-        // Si Oscar es líder:
-        //     Nicol debe ser piano principal
-        //
-        // Si Nicol es líder:
-        //     Oscar debe ser piano principal
-        //
-        // Si Mayerly es líder:
-        //     Oscar o Nicol pueden tocar.
+        // Si Oscar lidera → Nicol piano
+        if (
+            lider.nombre ===
+            "Oscar Julián Díaz"
+        ) {
 
-        if (lider.nombre === "Oscar Julián Díaz") {
-
-            candidatosPiano =
-                candidatosPiano.filter(
-                    p => p.nombre === "Nicol Pineda"
-                );
-
-        } else if (lider.nombre === "Nicol Pineda") {
-
-            candidatosPiano =
-                candidatosPiano.filter(
-                    p => p.nombre === "Oscar Julián Díaz"
-                );
-
-        } else {
-
-            candidatosPiano =
-                candidatosPiano.filter(
+            pianos =
+                pianos.filter(
                     p =>
-                        p.nombre === "Oscar Julián Díaz" ||
-                        p.nombre === "Nicol Pineda"
+                        p.nombre ===
+                        "Nicol Pineda"
                 );
 
         }
 
 
-        const piano =
-            elegirMenorParticipacion(
-                candidatosPiano
-            );
+        // Si Nicol lidera → Oscar piano
+        else if (
+            lider.nombre ===
+            "Nicol Pineda"
+        ) {
+
+            pianos =
+                pianos.filter(
+                    p =>
+                        p.nombre ===
+                        "Oscar Julián Díaz"
+                );
+
+        }
+
+
+        // Si Mayerly lidera → Oscar o Nicol
+        else {
+
+            pianos =
+                pianos.filter(
+                    p =>
+                        p.nombre ===
+                        "Oscar Julián Díaz" ||
+
+                        p.nombre ===
+                        "Nicol Pineda"
+                );
+
+        }
+
+
+        pianos =
+            ordenarPorParticipacion(pianos);
+
+
+        const piano = pianos[0];
 
 
         if (!piano) {
 
-            console.error(
-                "❌ No hay pianista principal válido para",
-                servicio.fecha
+            errores.push(
+                `${servicio.fecha}: no hay piano principal válido`
             );
 
             continue;
         }
 
 
-        asignados.push({
-            integrante_id: piano.id,
-            rol: "Piano principal"
-        });
-
-        participaciones[piano.id]++;
+        registrar(
+            piano,
+            "Piano principal",
+            asignados
+        );
 
 
         // =================================================
         // PIANO AUXILIAR
         // =================================================
+        //
+        // Juan José es aprendiz y auxiliar.
+        //
+        // Lo utilizamos aproximadamente en la mitad
+        // de los servicios para darle participación,
+        // pero NO es obligatorio.
+        // =================================================
 
         const juanJose =
             integrantes.find(
-                p => p.nombre === "Juan José Restrepo"
+                p =>
+                    p.nombre ===
+                    "Juan José Restrepo"
             );
 
 
+        const usarAuxiliar =
+            indiceServicio % 2 === 1;
+
+
         if (
+            usarAuxiliar &&
             juanJose &&
             estaDisponible(juanJose, servicio) &&
-            !yaAsignado(juanJose, asignados)
+            !estaAsignado(juanJose, asignados)
         ) {
 
-            // Lo dejamos como auxiliar solamente
-            // cuando no es necesario que el equipo
-            // quede excesivamente cargado.
+            registrar(
+                juanJose,
+                "Piano auxiliar",
+                asignados
+            );
 
-            asignados.push({
-                integrante_id: juanJose.id,
-                rol: "Piano auxiliar"
-            });
-
-            participaciones[juanJose.id]++;
         }
 
 
@@ -528,59 +673,44 @@ async function generarCronograma() {
         // COROS
         // =================================================
 
-        let candidatosCoros =
+        let coristas =
             integrantes.filter(persona =>
 
                 persona.instrumento === "Coro" &&
 
                 estaDisponible(persona, servicio) &&
 
-                !yaAsignado(persona, asignados)
+                !estaAsignado(persona, asignados)
 
             );
 
 
-        // Elegimos los 3 con menos participaciones
-        candidatosCoros.sort((a, b) => {
-
-            const diferencia =
-                participaciones[a.id] -
-                participaciones[b.id];
-
-            if (diferencia !== 0) {
-                return diferencia;
-            }
-
-            return a.nombre.localeCompare(
-                b.nombre,
-                "es"
-            );
-        });
+        coristas =
+            ordenarPorParticipacion(coristas);
 
 
-        const coros =
-            candidatosCoros.slice(0, 3);
+        const seleccionCoros =
+            coristas.slice(0, 3);
 
 
-        if (coros.length < 3) {
+        if (seleccionCoros.length !== 3) {
 
-            console.error(
-                "❌ No hay 3 coristas disponibles para",
-                servicio.fecha
+            errores.push(
+                `${servicio.fecha}: no hay 3 coristas disponibles`
             );
 
             continue;
         }
 
 
-        coros.forEach(coro => {
+        seleccionCoros.forEach(coro => {
 
-            asignados.push({
-                integrante_id: coro.id,
-                rol: "Coro"
-            });
+            registrar(
+                coro,
+                "Coro",
+                asignados
+            );
 
-            participaciones[coro.id]++;
         });
 
 
@@ -592,7 +722,8 @@ async function generarCronograma() {
 
             todasLasAsignaciones.push({
 
-                servicio_id: servicio.id,
+                servicio_id:
+                    servicio.id,
 
                 integrante_id:
                     asignacion.integrante_id,
@@ -600,79 +731,290 @@ async function generarCronograma() {
                 rol:
                     asignacion.rol,
 
-                estado: "Pendiente",
+                estado:
+                    "Pendiente",
 
                 es_principal:
-                    asignacion.rol !== "Piano auxiliar"
+                    asignacion.rol !==
+                    "Piano auxiliar"
 
             });
 
         });
 
 
-        // Mostrar resultado
+        // =================================================
+        // MOSTRAR SERVICIO
+        // =================================================
+
         console.log(
-            "Batería:",
+            "🥁 Batería:",
             bateria.nombre
         );
 
         console.log(
-            "Bajo:",
-            bajo.nombre
+            "🎸 Bajo:",
+            pareja.bajo.nombre
         );
 
         console.log(
-            "Guitarra:",
-            guitarra.nombre
+            "🎸 Guitarra:",
+            pareja.guitarra.nombre
         );
 
         console.log(
-            "Voz líder:",
+            "🎤 Líder:",
             lider.nombre
         );
 
         console.log(
-            "Piano:",
+            "🎹 Piano:",
             piano.nombre
         );
 
         console.log(
-            "Piano auxiliar:",
-            juanJose ? juanJose.nombre : "Ninguno"
+            "🎹 Auxiliar:",
+            juanJose &&
+            asignados.some(
+                a =>
+                    a.integrante_id ===
+                    juanJose.id &&
+                    a.rol ===
+                    "Piano auxiliar"
+            )
+                ? juanJose.nombre
+                : "Ninguno"
         );
 
         console.log(
-            "Coros:",
-            coros.map(c => c.nombre)
+            "🎶 Coros:",
+            seleccionCoros.map(
+                c => c.nombre
+            )
         );
+
     }
 
 
     // =====================================================
-    // INSERTAR ASIGNACIONES
+    // 7. VALIDACIÓN GENERAL
     // =====================================================
 
     console.log("");
-    console.log(
-        "Total de asignaciones:",
-        todasLasAsignaciones.length
-    );
+    console.log("=================================");
+    console.log("VALIDANDO CRONOGRAMA");
+    console.log("=================================");
 
 
-    if (todasLasAsignaciones.length === 0) {
+    if (errores.length > 0) {
 
-        console.warn(
-            "No se generaron asignaciones."
+        console.error(
+            "❌ EL CRONOGRAMA TIENE ERRORES"
+        );
+
+        errores.forEach(error => {
+            console.error(error);
+        });
+
+        console.error(
+            "No se guardará ninguna asignación."
         );
 
         return;
     }
 
 
-    const { data, error } =
+    // =====================================================
+    // VALIDAR CANTIDAD
+    // =====================================================
+
+    // 8 roles obligatorios:
+    //
+    // batería
+    // bajo
+    // guitarra
+    // piano principal
+    // líder
+    // 3 coros
+    //
+    // = 8 asignaciones por servicio
+    //
+    // Piano auxiliar es opcional.
+
+    const minimoEsperado =
+        servicios.length * 8;
+
+
+    if (
+        todasLasAsignaciones.length <
+        minimoEsperado
+    ) {
+
+        console.error(
+            "❌ Faltan asignaciones."
+        );
+
+        return;
+    }
+
+
+    // =====================================================
+    // VALIDAR DUPLICADOS
+    // =====================================================
+
+    for (const servicio of servicios) {
+
+        const asignacionesServicio =
+            todasLasAsignaciones.filter(
+                a =>
+                    a.servicio_id ===
+                    servicio.id
+            );
+
+
+        const personas =
+            asignacionesServicio.map(
+                a =>
+                    a.integrante_id
+            );
+
+
+        const personasUnicas =
+            new Set(personas);
+
+
+        if (
+            personas.length !==
+            personasUnicas.size
+        ) {
+
+            console.error(
+                "❌ Hay una persona con dos roles en:",
+                servicio.fecha
+            );
+
+            return;
+        }
+
+
+        const roles =
+            asignacionesServicio.map(
+                a => a.rol
+            );
+
+
+        const rolesObligatorios = [
+            "Batería",
+            "Bajo",
+            "Guitarra eléctrica",
+            "Piano principal",
+            "Voz líder",
+            "Coro"
+        ];
+
+
+        for (
+            const rol of rolesObligatorios
+        ) {
+
+            const cantidad =
+                roles.filter(
+                    r => r === rol
+                ).length;
+
+
+            const esperado =
+                rol === "Coro"
+                    ? 3
+                    : 1;
+
+
+            if (
+                cantidad !== esperado
+            ) {
+
+                console.error(
+                    `❌ ${servicio.fecha}: ${rol} tiene ${cantidad}, esperado ${esperado}`
+                );
+
+                return;
+            }
+
+        }
+
+    }
+
+
+    // =====================================================
+    // 8. VALIDAR JOHAN + SANTIAGO
+    // =====================================================
+
+    for (const servicio of servicios) {
+
+        const asignacionesServicio =
+            todasLasAsignaciones.filter(
+                a =>
+                    a.servicio_id ===
+                    servicio.id
+            );
+
+
+        const nombres =
+            asignacionesServicio.map(
+                a => {
+
+                    const persona =
+                        integrantes.find(
+                            p =>
+                                p.id ===
+                                a.integrante_id
+                        );
+
+                    return persona?.nombre;
+
+                }
+            );
+
+
+        if (
+            nombres.includes("Johan Díaz") &&
+            nombres.includes("Santiago Mendoza")
+        ) {
+
+            console.error(
+                "❌ REGLA VIOLADA:",
+                servicio.fecha,
+                "Johan Díaz y Santiago Mendoza no pueden coincidir."
+            );
+
+            return;
+        }
+
+    }
+
+
+    // =====================================================
+    // 9. GUARDAR
+    // =====================================================
+
+    console.log(
+        "✅ Todas las validaciones fueron superadas."
+    );
+
+    console.log(
+        "Guardando asignaciones..."
+    );
+
+
+    const {
+        data,
+        error
+    } =
         await supabaseClient
             .from("asignaciones")
-            .insert(todasLasAsignaciones)
+            .insert(
+                todasLasAsignaciones
+            )
             .select();
 
 
@@ -687,41 +1029,60 @@ async function generarCronograma() {
     }
 
 
+    // =====================================================
+    // 10. RESUMEN
+    // =====================================================
+
+    console.log("");
+    console.log("=================================");
+    console.log("✅ CRONOGRAMA GENERADO");
+    console.log("=================================");
+
     console.log(
-        "================================="
+        "Servicios:",
+        servicios.length
     );
 
     console.log(
-        "✅ CRONOGRAMA GENERADO"
-    );
-
-    console.log(
-        "Asignaciones guardadas:",
+        "Asignaciones:",
         data.length
     );
 
+    console.log("");
+    console.log(
+        "PARTICIPACIONES:"
+    );
+
+
+    integrantes
+        .sort(
+            (a, b) =>
+                participaciones[b.id] -
+                participaciones[a.id]
+        )
+        .forEach(persona => {
+
+            console.log(
+                `${persona.nombre} → ${participaciones[persona.id]}`
+            );
+
+        });
+
+
+    console.log("");
     console.log(
         "================================="
     );
 
-
-    // Mostrar resumen de participaciones
-
     console.log(
-        "Participaciones por integrante:"
+        "🎉 Cronograma listo."
     );
 
-    integrantes.forEach(persona => {
+    console.log(
+        "================================="
 
-        console.log(
-            persona.nombre,
-            "→",
-            participaciones[persona.id]
-        );
-
-    });
+    );
 }
-
 
 // =========================================================
 // NAVEGACIÓN TEMPORAL
