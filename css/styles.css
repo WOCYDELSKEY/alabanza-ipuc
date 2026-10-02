@@ -251,3 +251,117 @@ footer {
     }
 
 }
+
+/* =========================================
+   CRONOGRAMA
+========================================= */
+
+.contenedor {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.encabezado-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 20px;
+}
+
+.encabezado-pagina h1 {
+    margin: 0 0 5px;
+}
+
+.encabezado-pagina p {
+    margin: 0;
+    opacity: 0.7;
+}
+
+.btn-recargar {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.estado {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    background: #f1f1f1;
+}
+
+.cronograma {
+    display: grid;
+    gap: 20px;
+}
+
+.servicio-card {
+    background: white;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    border-left: 5px solid #333;
+}
+
+.servicio-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.servicio-fecha {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.servicio-hora {
+    font-size: 15px;
+    opacity: 0.7;
+}
+
+.asignaciones {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.asignacion {
+    padding: 12px;
+    background: #f7f7f7;
+    border-radius: 9px;
+}
+
+.asignacion-rol {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0.65;
+    margin-bottom: 4px;
+}
+
+.asignacion-nombre {
+    font-weight: 600;
+}
+
+@media (max-width: 700px) {
+
+    .encabezado-pagina {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .asignaciones {
+        grid-template-columns: 1fr;
+    }
+
+    .servicio-card {
+        padding: 16px;
+    }
+}
