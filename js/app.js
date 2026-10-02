@@ -1129,3 +1129,221 @@ document.addEventListener(
 
     }
 );
+
+// =====================================================
+// CARGAR CRONOGRAMA EN PANTALLA
+// =====================================================
+
+async function cargarCronograma() {
+
+    const contenedor = document.getElementById("cronograma");
+    const estado = document.getElementById("estadoCronograma");
+
+    if (!contenedor) {
+        console.error("No se encontró el contenedor del cronograma.");
+        return;
+    }
+
+    estado.textContent = "Cargando cronograma...";
+
+    // -------------------------------------------------
+    // 1. Obtener servicios de octubre 2026
+    // -------------------------------------------------
+
+    const { data: servicios, error: errorServicios } =
+        await supabaseClient
+            .from("servicios")
+            .select("*")
+            .gte("fecha", "2026-10-01")
+            .lte("fecha", "2026-10-31")
+            .order("fecha", { ascending: true })
+            .order("hora", { ascending: true });
+
+    if (errorServicios) {
+        console.error("Error obteniendo servicios:", errorServicios);
+        estado.textContent = "❌ Error cargando los servicios.";
+        return;
+    }
+
+    if (!servicios || servicios.length === 0) {
+        estado.textContent = "No hay servicios registrados.";
+        contenedor.innerHTML = "";
+        return;
+    }
+
+    // -------------------------------------------------
+    // 2. Obtener asignaciones
+    // -------------------------------------------------
+
+    const servicioIds = servicios.map(servicio => servicio.id);
+
+    const { data: asignaciones, error: errorAsignaciones } =
+        await supabaseClient
+            .from("asignaciones")
+            .select(`
+                id,
+                servicio_id,
+                integrante_id,
+                rol,
+                estado,
+                es_principal,
+                integrantes (
+                    id,
+                    nombre,
+                    instrumento
+                )
+            `)
+            .in("servicio_id", servicioIds);
+
+    if (errorAsignaciones) {
+        console.error("Error obteniendo asignaciones:", errorAsignaciones);
+        estado.textContent = "❌ Error cargando las asignaciones.";
+        return;
+    }
+
+    // -------------------------------------------------
+    // 3. Construir cronograma
+    // -------------------------------------------------
+
+    contenedor.innerHTML = "";
+
+    servicios.forEach(servicio => {
+
+        const asignacionesServicio =
+            asignaciones.filter(
+                asignacion =>
+                    asignacion.servicio_id === servicio.id
+            );
+
+        const fecha = new Date(
+            servicio.fecha + "T12:00:00"
+        );
+
+        const fechaTexto = fecha.toLocaleDateString(
+            "es-CO",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+            }
+        );
+
+        const fechaCapitalizada =
+            fechaTexto.charAt(0).toUpperCase() +
+            fechaTexto.slice(1);
+
+        const horaTexto =
+            servicio.hora.substring(0, 5);
+
+        const card =
+            document.createElement("article");
+
+        card.className = "servicio-card";
+
+        // -------------------------------------------------
+        // Encabezado
+        // -------------------------------------------------
+
+        const cabecera =
+            document.createElement("div");
+
+        cabecera.className =
+            "servicio-cabecera";
+
+        cabecera.innerHTML = `
+            <div class="servicio-fecha">
+                ${fechaCapitalizada}
+            </div>
+
+            <div class="servicio-hora">
+                🕐 ${horaTexto}
+            </div>
+        `;
+
+        card.appendChild(cabecera);
+
+        // -------------------------------------------------
+        // Asignaciones
+        // -------------------------------------------------
+
+        const lista =
+            document.createElement("div");
+
+        lista.className =
+            "asignaciones";
+
+        const ordenRoles = [
+            "Batería",
+            "Bajo",
+            "Guitarra eléctrica",
+            "Piano principal",
+            "Piano auxiliar",
+            "Voz líder",
+            "Coro"
+        ];
+
+        const emojis = {
+            "Batería": "🥁",
+            "Bajo": "🎸",
+            "Guitarra eléctrica": "🎸",
+            "Piano principal": "🎹",
+            "Piano auxiliar": "🎹",
+            "Voz líder": "🎤",
+            "Coro": "🎶"
+        };
+
+        ordenRoles.forEach(rol => {
+
+            const asignacionesRol =
+                asignacionesServicio.filter(
+                    asignacion =>
+                        asignacion.rol === rol
+                );
+
+            asignacionesRol.forEach(asignacion => {
+
+                const integrante =
+                    asignacion.integrantes;
+
+                if (!integrante) return;
+
+                const elemento =
+                    document.createElement("div");
+
+                elemento.className =
+                    "asignacion";
+
+                elemento.innerHTML = `
+                    <span class="asignacion-rol">
+                        ${emojis[rol] || ""} ${rol}
+                    </span>
+
+                    <span class="asignacion-nombre">
+                        ${integrante.nombre}
+                    </span>
+                `;
+
+                lista.appendChild(elemento);
+            });
+        });
+
+        card.appendChild(lista);
+
+        contenedor.appendChild(card);
+    });
+
+    estado.textContent =
+        `✅ ${servicios.length} servicios cargados correctamente.`;
+}
+
+
+// =====================================================
+// CARGAR CRONOGRAMA AL ABRIR LA PÁGINA
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        cargarCronograma();
+    }
+);
