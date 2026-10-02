@@ -637,3 +637,40 @@ footer {
     padding: 30px;
     color: #777;
 }
+
+/* =========================================
+   BOTÓN WHATSAPP
+========================================= */
+
+.btn-whatsapp {
+    margin-top: 8px;
+
+    border: none;
+    border-radius: 7px;
+
+    padding: 7px 10px;
+
+    background: #25D366;
+    color: white;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    width: fit-content;
+}
+
+.btn-whatsapp:hover {
+    opacity: 0.85;
+}
+
+.telefono-faltante {
+    display: block;
+
+    margin-top: 7px;
+
+    font-size: 12px;
+
+    color: #999;
+}
