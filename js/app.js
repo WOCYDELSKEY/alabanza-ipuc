@@ -1200,7 +1200,11 @@ async function cargarCronograma() {
         estado.textContent = "❌ Error cargando las asignaciones.";
         return;
     }
-
+    
+    // Guardar datos globalmente para la ventana de detalle
+    window.serviciosCronograma = servicios;
+    window.asignacionesCronograma = asignaciones;
+    
     // -------------------------------------------------
     // 3. Construir cronograma
     // -------------------------------------------------
@@ -1239,6 +1243,10 @@ async function cargarCronograma() {
             document.createElement("article");
 
         card.className = "servicio-card";
+
+        card.onclick = () => {
+            mostrarDetalleServicio(servicio.id);
+        };
 
         // -------------------------------------------------
         // Encabezado
@@ -1345,5 +1353,224 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
         cargarCronograma();
+    }
+);
+
+// =====================================================
+// MOSTRAR DETALLE DEL SERVICIO
+// =====================================================
+
+function mostrarDetalleServicio(servicioId) {
+
+    const servicios =
+        window.serviciosCronograma || [];
+
+    const asignaciones =
+        window.asignacionesCronograma || [];
+
+    const servicio =
+        servicios.find(
+            s => s.id === servicioId
+        );
+
+    if (!servicio) {
+        console.error("No se encontró el servicio.");
+        return;
+    }
+
+    const asignacionesServicio =
+        asignaciones.filter(
+            a => a.servicio_id === servicioId
+        );
+
+    const fecha =
+        new Date(
+            servicio.fecha + "T12:00:00"
+        );
+
+    const fechaTexto =
+        fecha.toLocaleDateString(
+            "es-CO",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+            }
+        );
+
+    const fechaCapitalizada =
+        fechaTexto.charAt(0).toUpperCase() +
+        fechaTexto.slice(1);
+
+    const hora =
+        servicio.hora.substring(0, 5);
+
+    const emojis = {
+        "Batería": "🥁",
+        "Bajo": "🎸",
+        "Guitarra eléctrica": "🎸",
+        "Piano principal": "🎹",
+        "Piano auxiliar": "🎹",
+        "Voz líder": "🎤",
+        "Coro": "🎶"
+    };
+
+    const detalle =
+        document.getElementById(
+            "detalleServicio"
+        );
+
+    detalle.innerHTML = `
+        <h2 class="detalle-titulo">
+            ${fechaCapitalizada}
+        </h2>
+
+        <div class="detalle-hora">
+            🕐 ${hora}
+        </div>
+
+        <div class="detalle-seccion">
+
+            <h3>🎵 Músicos</h3>
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Batería",
+                emojis
+            )}
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Bajo",
+                emojis
+            )}
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Guitarra eléctrica",
+                emojis
+            )}
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Piano principal",
+                emojis
+            )}
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Piano auxiliar",
+                emojis
+            )}
+
+        </div>
+
+        <div class="detalle-seccion">
+
+            <h3>🎤 Voces</h3>
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Voz líder",
+                emojis
+            )}
+
+            ${crearDetalleRol(
+                asignacionesServicio,
+                "Coro",
+                emojis
+            )}
+
+        </div>
+    `;
+
+    document
+        .getElementById("modalServicio")
+        .classList.add("activo");
+}
+
+
+// =====================================================
+// CREAR PERSONAS DEL DETALLE
+// =====================================================
+
+function crearDetalleRol(
+    asignaciones,
+    rol,
+    emojis
+) {
+
+    const lista =
+        asignaciones.filter(
+            a => a.rol === rol
+        );
+
+    if (lista.length === 0) {
+        return "";
+    }
+
+    return lista.map(asignacion => {
+
+        const nombre =
+            asignacion.integrantes?.nombre ||
+            "Sin nombre";
+
+        return `
+            <div class="detalle-persona">
+
+                <div class="detalle-persona-icono">
+                    ${emojis[rol] || "🎵"}
+                </div>
+
+                <div class="detalle-persona-info">
+
+                    <span class="detalle-persona-rol">
+                        ${rol}
+                    </span>
+
+                    <span class="detalle-persona-nombre">
+                        ${nombre}
+                    </span>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+// =====================================================
+// CERRAR DETALLE
+// =====================================================
+
+function cerrarDetalleServicio() {
+
+    document
+        .getElementById("modalServicio")
+        .classList.remove("activo");
+}
+
+
+// =====================================================
+// CERRAR AL HACER CLICK FUERA
+// =====================================================
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        const modal =
+            document.getElementById(
+                "modalServicio"
+            );
+
+        if (
+            event.target === modal
+        ) {
+            cerrarDetalleServicio();
+        }
+
     }
 );
