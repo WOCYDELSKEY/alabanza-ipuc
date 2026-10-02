@@ -1187,10 +1187,12 @@ async function cargarCronograma() {
                 rol,
                 estado,
                 es_principal,
+                token_confirmacion,
                 integrantes (
                     id,
                     nombre,
-                    instrumento
+                    instrumento,
+                    telefono
                 )
             `)
             .in("servicio_id", servicioIds);
@@ -1515,6 +1517,10 @@ function crearDetalleRol(
             asignacion.integrantes?.nombre ||
             "Sin nombre";
 
+        const telefono =
+            asignacion.integrantes?.telefono ||
+            "";
+
         return `
             <div class="detalle-persona">
 
@@ -1532,6 +1538,23 @@ function crearDetalleRol(
                         ${nombre}
                     </span>
 
+                    ${
+                        telefono
+                        ? `
+                            <button
+                                class="btn-whatsapp"
+                                onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
+                            >
+                                📲 Enviar WhatsApp
+                            </button>
+                        `
+                        : `
+                            <span class="telefono-faltante">
+                                Sin teléfono registrado
+                            </span>
+                        `
+                    }
+
                 </div>
 
             </div>
@@ -1539,7 +1562,6 @@ function crearDetalleRol(
 
     }).join("");
 }
-
 
 // =====================================================
 // CERRAR DETALLE
@@ -1574,3 +1596,189 @@ document.addEventListener(
 
     }
 );
+
+// =====================================================
+// ENVIAR WHATSAPP
+// =====================================================
+
+function enviarWhatsApp(asignacionId) {
+
+    const asignaciones =
+        window.asignacionesCronograma || [];
+
+    const servicios =
+        window.serviciosCronograma || [];
+
+
+    const asignacion =
+        asignaciones.find(
+            a => a.id === asignacionId
+        );
+
+
+    if (!asignacion) {
+
+        alert(
+            "No se encontró la asignación."
+        );
+
+        return;
+    }
+
+
+    const integrante =
+        asignacion.integrantes;
+
+
+    if (!integrante) {
+
+        alert(
+            "No se encontró el integrante."
+        );
+
+        return;
+    }
+
+
+    const telefono =
+        integrante.telefono;
+
+
+    if (!telefono) {
+
+        alert(
+            `No hay teléfono registrado para ${integrante.nombre}.`
+        );
+
+        return;
+    }
+
+
+    const servicio =
+        servicios.find(
+            s => s.id === asignacion.servicio_id
+        );
+
+
+    if (!servicio) {
+
+        alert(
+            "No se encontró el servicio."
+        );
+
+        return;
+    }
+
+
+    // -------------------------------------------------
+    // FORMATEAR TELÉFONO
+    // -------------------------------------------------
+
+    let numero =
+        String(telefono)
+            .replace(/\D/g, "");
+
+
+    // Si está como 3001234567
+    if (numero.length === 10) {
+
+        numero =
+            "57" + numero;
+
+    }
+
+
+    // Si ya está como 573001234567
+    // se deja igual.
+
+
+    // -------------------------------------------------
+    // FECHA
+    // -------------------------------------------------
+
+    const fecha =
+        new Date(
+            servicio.fecha +
+            "T12:00:00"
+        );
+
+
+    const fechaTexto =
+        fecha.toLocaleDateString(
+            "es-CO",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+            }
+        );
+
+
+    const fechaCapitalizada =
+        fechaTexto
+            .charAt(0)
+            .toUpperCase() +
+        fechaTexto.slice(1);
+
+
+    const hora =
+        servicio.hora.substring(
+            0,
+            5
+        );
+
+
+    // -------------------------------------------------
+    // ENLACE PERSONALIZADO
+    // -------------------------------------------------
+
+    const enlaceConfirmacion =
+        new URL(
+            "confirmacion.html",
+            window.location.href
+        ).href +
+        "?token=" +
+        asignacion.token_confirmacion;
+
+
+    // -------------------------------------------------
+    // MENSAJE
+    // -------------------------------------------------
+
+    const mensaje =
+
+`🎶 *ALABANZA IPUC LÍBANO CENTRAL*
+
+Hola ${integrante.nombre}.
+
+Has sido asignado para el servicio:
+
+📅 *${fechaCapitalizada}*
+🕐 *${hora}*
+
+🎵 *Tu asignación:*
+${obtenerNombreRol(asignacion.rol)}
+
+Por favor confirma tu participación en el siguiente enlace:
+
+👉 ${enlaceConfirmacion}
+
+¡Dios te bendiga! 🙏`;
+
+
+    // -------------------------------------------------
+    // ABRIR WHATSAPP
+    // -------------------------------------------------
+
+    const urlWhatsApp =
+        "https://wa.me/" +
+        numero +
+        "?text=" +
+        encodeURIComponent(mensaje);
+
+
+    window.open(
+        urlWhatsApp,
+        "_blank"
+    );
+}
