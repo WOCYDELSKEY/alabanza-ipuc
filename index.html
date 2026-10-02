@@ -23,102 +23,28 @@
     </header>
 
 
-    <main class="container">
+   <main class="contenedor">
 
-        <section class="welcome">
-            <h2>Bienvenido</h2>
+    <section class="encabezado-pagina">
+        <div>
+            <h1>📅 Cronograma de Alabanza</h1>
+            <p>IPUC Líbano Central · Octubre 2026</p>
+        </div>
 
-            <p>
-                Sistema de programación y confirmación
-                del equipo de alabanza.
-            </p>
-        </section>
+        <button class="btn-recargar" onclick="cargarCronograma()">
+            🔄 Actualizar
+        </button>
+    </section>
 
+    <div id="estadoCronograma" class="estado">
+        Cargando cronograma...
+    </div>
 
-        <section class="cards">
+    <section id="cronograma" class="cronograma">
+        <!-- Aquí se cargará el cronograma desde Supabase -->
+    </section>
 
-            <div class="card">
-                <div class="card-icon">📅</div>
-
-                <h3>Cronograma</h3>
-
-                <p>
-                    Consulta los servicios programados
-                    y las asignaciones del equipo.
-                </p>
-
-                <button onclick="irA('cronograma')">
-                    Ver cronograma
-                </button>
-            </div>
-
-
-            <div class="card">
-                <div class="card-icon">🎤</div>
-
-                <h3>Mi agenda</h3>
-
-                <p>
-                    Consulta tus próximos servicios
-                    y confirma tu asistencia.
-                </p>
-
-                <button onclick="irA('agenda')">
-                    Ver mi agenda
-                </button>
-            </div>
-
-
-            <div class="card">
-                <div class="card-icon">⚙️</div>
-
-                <h3>Administrador</h3>
-
-                <p>
-                    Gestiona integrantes, servicios,
-                    asignaciones y confirmaciones.
-                </p>
-
-                <button onclick="irA('admin')">
-                    Panel administrativo
-                </button>
-            </div>
-
-        </section>
-
-
-        <section class="next-service">
-
-            <div class="section-title">
-                <h2>Próximo servicio</h2>
-
-                <span class="badge pending">
-                    Pendiente
-                </span>
-            </div>
-
-            <div class="service-info">
-
-                <div>
-                    <span>📅 Fecha</span>
-                    <strong>Próximamente</strong>
-                </div>
-
-                <div>
-                    <span>🕐 Hora</span>
-                    <strong>6:30 p. m.</strong>
-                </div>
-
-                <div>
-                    <span>📍 Lugar</span>
-                    <strong>IPUC Líbano Central</strong>
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
+</main>
 
 
     <footer>
