@@ -1188,6 +1188,7 @@ async function cargarCronograma() {
                 estado,
                 es_principal,
                 token_confirmacion,
+                reemplaza_asignacion_id,
                 integrantes (
                     id,
                     nombre,
