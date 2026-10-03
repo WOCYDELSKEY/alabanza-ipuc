@@ -1652,51 +1652,51 @@ function crearDetalleRol(
         // BOTÓN WHATSAPP
         // =============================================
 
-        let botonWhatsApp = "";
+                let botonWhatsApp = "";
 
-            if (estado === "Pendiente") {
-            
-                if (telefono) {
-            
-                    botonWhatsApp = `
-                        <button
-                            class="btn-whatsapp"
-                            onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
-                        >
-                            📲 Enviar WhatsApp
-                        </button>
-                    `;
-            
-                } else {
-            
-                    botonWhatsApp = `
-                        <span class="telefono-faltante">
-                            Sin teléfono registrado
-                        </span>
-                    `;
-            
-                }
-            
-            }
-            
-            else if (estado === "Confirmado") {
-            
+        if (estado === "Pendiente") {
+
+            if (telefono) {
+
                 botonWhatsApp = `
-                    <span class="participacion-confirmada">
-                        ✅ Participación confirmada
+                    <button
+                        class="btn-whatsapp"
+                        onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
+                    >
+                        📲 Enviar WhatsApp
+                    </button>
+                `;
+
+            } else {
+
+                botonWhatsApp = `
+                    <span class="telefono-faltante">
+                        Sin teléfono registrado
                     </span>
                 `;
-            
+
             }
-            
-            } else if (estado === "No puede") {
-                botonWhatsApp = `
-                    <button class="btn-reemplazo"
-                        onclick="event.stopPropagation(); abrirReemplazos('${asignacion.id}')">
-                        🔄 Buscar reemplazo
-                    </button>`;
-            }
-        
+
+        } else if (estado === "Confirmado") {
+
+            botonWhatsApp = `
+                <span class="participacion-confirmada">
+                    ✅ Participación confirmada
+                </span>
+            `;
+
+        } else if (estado === "No puede") {
+
+            botonWhatsApp = `
+                <button
+                    class="btn-reemplazo"
+                    onclick="event.stopPropagation(); abrirReemplazos('${asignacion.id}')"
+                >
+                    🔄 Buscar reemplazo
+                </button>
+            `;
+
+        }
 
         // =============================================
         // HTML
