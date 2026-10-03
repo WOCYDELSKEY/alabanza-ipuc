@@ -1417,12 +1417,41 @@ function mostrarDetalleServicio(servicioId) {
         "Coro": "🎶"
     };
 
+
+    // =================================================
+    // CONTAR ESTADOS
+    // =================================================
+
+    const confirmados =
+        asignacionesServicio.filter(
+            a => a.estado === "Confirmado"
+        ).length;
+
+    const noPueden =
+        asignacionesServicio.filter(
+            a => a.estado === "No puede"
+        ).length;
+
+    const pendientes =
+        asignacionesServicio.filter(
+            a =>
+                !a.estado ||
+                a.estado === "Pendiente"
+        ).length;
+
+
+    // =================================================
+    // HTML DEL DETALLE
+    // =================================================
+
     const detalle =
         document.getElementById(
             "detalleServicio"
         );
 
+
     detalle.innerHTML = `
+
         <h2 class="detalle-titulo">
             ${fechaCapitalizada}
         </h2>
@@ -1431,9 +1460,65 @@ function mostrarDetalleServicio(servicioId) {
             🕐 ${hora}
         </div>
 
+
+        <!-- ========================================= -->
+        <!-- RESUMEN DE CONFIRMACIONES -->
+        <!-- ========================================= -->
+
+        <div class="panel-confirmaciones">
+
+            <h3>
+                📊 Confirmaciones
+            </h3>
+
+            <div class="resumen-confirmaciones">
+
+                <div class="resumen-item confirmado">
+                    <strong>
+                        ${confirmados}
+                    </strong>
+
+                    <span>
+                        🟢 Confirmados
+                    </span>
+                </div>
+
+
+                <div class="resumen-item pendiente">
+                    <strong>
+                        ${pendientes}
+                    </strong>
+
+                    <span>
+                        🟡 Pendientes
+                    </span>
+                </div>
+
+
+                <div class="resumen-item no-puede">
+                    <strong>
+                        ${noPueden}
+                    </strong>
+
+                    <span>
+                        🔴 No pueden
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ========================================= -->
+        <!-- MÚSICOS -->
+        <!-- ========================================= -->
+
         <div class="detalle-seccion">
 
-            <h3>🎵 Músicos</h3>
+            <h3>
+                🎵 Músicos
+            </h3>
 
             ${crearDetalleRol(
                 asignacionesServicio,
@@ -1467,9 +1552,16 @@ function mostrarDetalleServicio(servicioId) {
 
         </div>
 
+
+        <!-- ========================================= -->
+        <!-- VOCES -->
+        <!-- ========================================= -->
+
         <div class="detalle-seccion">
 
-            <h3>🎤 Voces</h3>
+            <h3>
+                🎤 Voces
+            </h3>
 
             ${crearDetalleRol(
                 asignacionesServicio,
@@ -1484,13 +1576,14 @@ function mostrarDetalleServicio(servicioId) {
             )}
 
         </div>
+
     `;
+
 
     document
         .getElementById("modalServicio")
         .classList.add("activo");
 }
-
 
 // =====================================================
 // CREAR PERSONAS DEL DETALLE
@@ -1511,6 +1604,7 @@ function crearDetalleRol(
         return "";
     }
 
+
     return lista.map(asignacion => {
 
         const nombre =
@@ -1521,12 +1615,98 @@ function crearDetalleRol(
             asignacion.integrantes?.telefono ||
             "";
 
+
+        // =============================================
+        // ESTADO
+        // =============================================
+
+        const estado =
+            asignacion.estado ||
+            "Pendiente";
+
+
+        let estadoTexto = "Pendiente";
+        let estadoClase = "pendiente";
+        let estadoIcono = "🟡";
+
+
+        if (estado === "Confirmado") {
+
+            estadoTexto = "Confirmado";
+            estadoClase = "confirmado";
+            estadoIcono = "🟢";
+
+        }
+
+
+        if (estado === "No puede") {
+
+            estadoTexto = "No puede";
+            estadoClase = "no-puede";
+            estadoIcono = "🔴";
+
+        }
+
+
+        // =============================================
+        // BOTÓN WHATSAPP
+        // =============================================
+
+        let botonWhatsApp = "";
+
+
+        if (telefono) {
+
+            botonWhatsApp = `
+                <button
+                    class="btn-whatsapp"
+                    onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
+                >
+                    📲 Enviar WhatsApp
+                </button>
+            `;
+
+        } else {
+
+            botonWhatsApp = `
+                <span class="telefono-faltante">
+                    Sin teléfono registrado
+                </span>
+            `;
+
+        }
+
+
+        // =============================================
+        // AVISO DE REEMPLAZO
+        // =============================================
+
+        let avisoReemplazo = "";
+
+
+        if (estado === "No puede") {
+
+            avisoReemplazo = `
+                <div class="aviso-reemplazo">
+                    🔄 Pendiente de reemplazo
+                </div>
+            `;
+
+        }
+
+
+        // =============================================
+        // HTML
+        // =============================================
+
         return `
+
             <div class="detalle-persona">
 
                 <div class="detalle-persona-icono">
                     ${emojis[rol] || "🎵"}
                 </div>
+
 
                 <div class="detalle-persona-info">
 
@@ -1534,34 +1714,32 @@ function crearDetalleRol(
                         ${rol}
                     </span>
 
+
                     <span class="detalle-persona-nombre">
                         ${nombre}
                     </span>
 
-                    ${
-                        telefono
-                        ? `
-                            <button
-                                class="btn-whatsapp"
-                                onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
-                            >
-                                📲 Enviar WhatsApp
-                            </button>
-                        `
-                        : `
-                            <span class="telefono-faltante">
-                                Sin teléfono registrado
-                            </span>
-                        `
-                    }
+
+                    <span class="estado-asignacion ${estadoClase}">
+                        ${estadoIcono}
+                        ${estadoTexto}
+                    </span>
+
+
+                    ${avisoReemplazo}
+
+
+                    ${botonWhatsApp}
 
                 </div>
 
             </div>
+
         `;
 
     }).join("");
 }
+
 
 // =====================================================
 // CERRAR DETALLE
