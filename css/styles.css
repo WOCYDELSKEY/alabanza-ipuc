@@ -674,3 +674,127 @@ footer {
 
     color: #999;
 }
+
+/* =====================================================
+   PANEL DE CONFIRMACIONES
+   ===================================================== */
+
+.panel-confirmaciones {
+    margin: 20px 0;
+    padding: 16px;
+    border-radius: 16px;
+    background: #f5f7fa;
+    border: 1px solid #e1e5ea;
+}
+
+.panel-confirmaciones h3 {
+    margin: 0 0 14px 0;
+    font-size: 18px;
+}
+
+
+.resumen-confirmaciones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+
+.resumen-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+
+.resumen-item strong {
+    font-size: 24px;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+
+.resumen-item span {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* Estados */
+
+.resumen-item.confirmado {
+    background: #e8f7ee;
+}
+
+
+.resumen-item.pendiente {
+    background: #fff7dc;
+}
+
+
+.resumen-item.no-puede {
+    background: #fdecec;
+}
+
+
+/* =====================================================
+   ESTADO DE CADA ASIGNACIÓN
+   ===================================================== */
+
+.estado-asignacion {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+
+.estado-asignacion.confirmado {
+    background: #e8f7ee;
+}
+
+
+.estado-asignacion.pendiente {
+    background: #fff7dc;
+}
+
+
+.estado-asignacion.no-puede {
+    background: #fdecec;
+}
+
+
+/* =====================================================
+   AVISO DE REEMPLAZO
+   ===================================================== */
+
+.aviso-reemplazo {
+    margin-top: 6px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: #fff0f0;
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 500px) {
+
+    .resumen-confirmaciones {
+        grid-template-columns: 1fr;
+    }
+
+}
