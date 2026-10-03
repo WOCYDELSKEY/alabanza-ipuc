@@ -1729,7 +1729,7 @@ function crearDetalleRol(
                     </span>
 
 
-                    ${avisoReemplazo}
+                    
 
 
                     ${botonWhatsApp}
@@ -1743,6 +1743,388 @@ function crearDetalleRol(
     }).join("");
 }
 
+async function abrirReemplazos(asignacionId) {
+
+    const asignaciones = window.asignacionesCronograma || [];
+    const servicios = window.serviciosCronograma || [];
+
+    const asignacion = asignaciones.find(a => a.id === asignacionId);
+
+    if (!asignacion) {
+        alert("No se encontró la asignación.");
+        return;
+    }
+
+    const servicio = servicios.find(s => s.id === asignacion.servicio_id);
+
+    if (!servicio) {
+        alert("No se encontró el servicio.");
+        return;
+    }
+
+    const detalle = document.getElementById("detalleServicio");
+
+    detalle.innerHTML = `
+        <div class="reemplazo-cargando">
+            <div class="spinner"></div>
+            <h2>🔄 Buscando reemplazos...</h2>
+            <p>Verificando disponibilidad y reglas del equipo.</p>
+        </div>
+    `;
+
+    try {
+
+        // --------------------------------------------------
+        // 1. Obtener integrantes activos
+        // --------------------------------------------------
+
+        const { data: integrantes, error: errorIntegrantes } =
+            await supabaseClient
+                .from("integrantes")
+                .select(`
+                    id,
+                    nombre,
+                    telefono,
+                    instrumento,
+                    nivel,
+                    puede_ser_lider,
+                    activo
+                `)
+                .eq("activo", true);
+
+        if (errorIntegrantes) {
+            throw errorIntegrantes;
+        }
+
+        // --------------------------------------------------
+        // 2. Obtener disponibilidad del día
+        // --------------------------------------------------
+
+        const fecha = new Date(servicio.fecha + "T12:00:00");
+        const diaSemana = fecha.getDay();
+
+        const { data: disponibilidades, error: errorDisponibilidad } =
+            await supabaseClient
+                .from("disponibilidad_integrantes")
+                .select(`
+                    integrante_id,
+                    disponible
+                `)
+                .eq("dia_semana", diaSemana)
+                .eq("disponible", true);
+
+        if (errorDisponibilidad) {
+            throw errorDisponibilidad;
+        }
+
+        const disponibles = new Set(
+            (disponibilidades || []).map(d => d.integrante_id)
+        );
+
+        // --------------------------------------------------
+        // 3. Obtener todas las asignaciones del servicio
+        // --------------------------------------------------
+
+        const asignacionesServicio =
+            asignaciones.filter(a => a.servicio_id === servicio.id);
+
+        // Personas que ya están ocupando otro rol
+        const personasAsignadas = new Set(
+            asignacionesServicio.map(a => a.integrante_id)
+        );
+
+        // Personas asignadas EXCEPTO la persona que no puede
+        // Esto es importante para evaluar correctamente
+        // reglas de reemplazo.
+        const otrasAsignaciones = asignacionesServicio.filter(
+            a => a.id !== asignacionId
+        );
+
+        // --------------------------------------------------
+        // 4. Información del rol a reemplazar
+        // --------------------------------------------------
+
+        const rol = asignacion.rol;
+
+        // --------------------------------------------------
+        // 5. Filtrar candidatos
+        // --------------------------------------------------
+
+        let candidatos = integrantes.filter(persona => {
+
+            // Debe estar disponible ese día
+            if (!disponibles.has(persona.id)) {
+                return false;
+            }
+
+            // No puede estar ocupando otro rol en este servicio
+            if (personasAsignadas.has(persona.id)) {
+                return false;
+            }
+
+            // ----------------------------------------------
+            // REGLA SEGÚN EL ROL
+            // ----------------------------------------------
+
+            if (rol === "Batería") {
+                if (persona.instrumento !== "Batería") {
+                    return false;
+                }
+            }
+
+            if (rol === "Bajo") {
+                if (persona.instrumento !== "Bajo") {
+                    return false;
+                }
+            }
+
+            if (rol === "Guitarra eléctrica") {
+                if (persona.instrumento !== "Guitarra eléctrica") {
+                    return false;
+                }
+            }
+
+            if (rol === "Piano principal") {
+
+                if (persona.instrumento !== "Piano") {
+                    return false;
+                }
+
+                // Juan José es auxiliar, nunca principal
+                if (persona.nombre === "Juan José Restrepo") {
+                    return false;
+                }
+
+                // Revisamos quién es el líder de ese servicio
+                const lider = asignacionesServicio.find(
+                    a => a.rol === "Voz líder"
+                );
+
+                const nombreLider = lider?.integrantes?.nombre;
+
+                // Si Oscar es líder, Nicol debe tocar piano
+                if (nombreLider === "Oscar Julián Díaz") {
+                    if (persona.nombre !== "Nicol Pineda") {
+                        return false;
+                    }
+                }
+
+                // Si Nicol es líder, Oscar debe tocar piano
+                if (nombreLider === "Nicol Pineda") {
+                    if (persona.nombre !== "Oscar Julián Díaz") {
+                        return false;
+                    }
+                }
+
+                // Si Mayerly es líder, cualquiera de los dos
+                // principales puede tocar piano
+                if (nombreLider === "Mayerly Trujillo") {
+                    if (
+                        persona.nombre !== "Oscar Julián Díaz" &&
+                        persona.nombre !== "Nicol Pineda"
+                    ) {
+                        return false;
+                    }
+                }
+            }
+
+            if (rol === "Piano auxiliar") {
+                if (persona.instrumento !== "Piano") {
+                    return false;
+                }
+            }
+
+            if (rol === "Voz líder") {
+
+                if (!persona.puede_ser_lider) {
+                    return false;
+                }
+            }
+
+            if (rol === "Coro") {
+
+                if (persona.instrumento !== "Coro") {
+                    return false;
+                }
+            }
+
+            // --------------------------------------------------
+            // REGLA JOHAN + SANTIAGO
+            // --------------------------------------------------
+
+            const nombresOtros = otrasAsignaciones.map(
+                a => a.integrantes?.nombre
+            );
+
+            if (
+                persona.nombre === "Johan Díaz" &&
+                nombresOtros.includes("Santiago Mendoza")
+            ) {
+                return false;
+            }
+
+            if (
+                persona.nombre === "Santiago Mendoza" &&
+                nombresOtros.includes("Johan Díaz")
+            ) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // --------------------------------------------------
+        // 6. Ordenar: principales primero
+        // --------------------------------------------------
+
+        candidatos.sort((a, b) => {
+
+            const nivelA = a.nivel === "Principal" ? 0 : 1;
+            const nivelB = b.nivel === "Principal" ? 0 : 1;
+
+            if (nivelA !== nivelB) {
+                return nivelA - nivelB;
+            }
+
+            return a.nombre.localeCompare(b.nombre);
+        });
+
+        // --------------------------------------------------
+        // 7. Formatear fecha
+        // --------------------------------------------------
+
+        const fechaTexto = fecha.toLocaleDateString(
+            "es-CO",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+            }
+        );
+
+        const fechaCapitalizada =
+            fechaTexto.charAt(0).toUpperCase() +
+            fechaTexto.slice(1);
+
+        const hora = servicio.hora.substring(0, 5);
+
+        // --------------------------------------------------
+        // 8. Mostrar candidatos
+        // --------------------------------------------------
+
+        detalle.innerHTML = `
+            <button
+                class="btn-volver-servicio"
+                onclick="mostrarDetalleServicio('${servicio.id}')">
+                ← Volver al servicio
+            </button>
+
+            <div class="reemplazo-header">
+
+                <div class="reemplazo-icono">
+                    🔄
+                </div>
+
+                <h2>Buscar reemplazo</h2>
+
+                <p>
+                    <strong>${obtenerNombreRol(rol)}</strong>
+                </p>
+
+                <p>
+                    ${fechaCapitalizada} · ${hora}
+                </p>
+
+                <p class="reemplazo-original">
+                    Reemplazar a:
+                    <strong>
+                        ${asignacion.integrantes?.nombre || "Sin nombre"}
+                    </strong>
+                </p>
+
+            </div>
+
+            <div class="candidatos-contenedor">
+
+                <h3>
+                    👥 Candidatos disponibles
+                    <span class="cantidad-candidatos">
+                        ${candidatos.length}
+                    </span>
+                </h3>
+
+                ${
+                    candidatos.length === 0
+                    ? `
+                        <div class="sin-candidatos">
+                            <div>😕</div>
+                            <strong>No hay candidatos disponibles</strong>
+                            <p>
+                                No se encontró ningún integrante que
+                                cumpla las reglas para este reemplazo.
+                            </p>
+                        </div>
+                    `
+                    : candidatos.map(persona => `
+                        <div class="candidato-card">
+
+                            <div class="candidato-icono">
+                                ${persona.instrumento === "Batería" ? "🥁" :
+                                  persona.instrumento === "Bajo" ? "🎸" :
+                                  persona.instrumento === "Guitarra eléctrica" ? "🎸" :
+                                  persona.instrumento === "Piano" ? "🎹" :
+                                  persona.instrumento === "Coro" ? "🎶" :
+                                  persona.puede_ser_lider ? "🎤" : "🎵"}
+                            </div>
+
+                            <div class="candidato-info">
+
+                                <strong>
+                                    ${persona.nombre}
+                                </strong>
+
+                                <span>
+                                    ${persona.instrumento || "Sin instrumento"}
+                                </span>
+
+                                <span class="candidato-nivel">
+                                    ${persona.nivel || "Sin nivel"}
+                                </span>
+
+                            </div>
+
+                        </div>
+                    `).join("")
+                }
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error("Error buscando reemplazos:", error);
+
+        detalle.innerHTML = `
+            <div class="error-reemplazo">
+
+                <div>❌</div>
+
+                <h2>Error buscando reemplazos</h2>
+
+                <p>
+                    No fue posible consultar los candidatos.
+                </p>
+
+                <button
+                    class="btn-volver-servicio"
+                    onclick="mostrarDetalleServicio('${servicio.id}')">
+                    ← Volver al servicio
+                </button>
+
+            </div>
+        `;
+    }
+}
 
 // =====================================================
 // CERRAR DETALLE
