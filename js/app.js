@@ -1989,6 +1989,8 @@ async function abrirReemplazos(asignacionId) {
             return a.nombre.localeCompare(b.nombre);
         });
 
+        window.candidatosReemplazo = candidatos;
+        
         // --------------------------------------------------
         // 7. Formatear fecha
         // --------------------------------------------------
@@ -2067,7 +2069,7 @@ async function abrirReemplazos(asignacionId) {
                     `
                     : candidatos.map(persona => `
                         <div class="candidato-card">
-
+                    
                             <div class="candidato-icono">
                                 ${persona.instrumento === "Batería" ? "🥁" :
                                   persona.instrumento === "Bajo" ? "🎸" :
@@ -2076,23 +2078,33 @@ async function abrirReemplazos(asignacionId) {
                                   persona.instrumento === "Coro" ? "🎶" :
                                   persona.puede_ser_lider ? "🎤" : "🎵"}
                             </div>
-
+                    
                             <div class="candidato-info">
-
+                    
                                 <strong>
                                     ${persona.nombre}
                                 </strong>
-
+                    
                                 <span>
                                     ${persona.instrumento || "Sin instrumento"}
                                 </span>
-
+                    
                                 <span class="candidato-nivel">
                                     ${persona.nivel || "Sin nivel"}
                                 </span>
-
+                    
                             </div>
-
+                    
+                            <button
+                                class="btn-seleccionar-reemplazo"
+                                onclick="seleccionarReemplazo(
+                                    '${asignacion.id}',
+                                    '${persona.id}'
+                                )"
+                            >
+                                Seleccionar
+                            </button>
+                    
                         </div>
                     `).join("")
                 }
@@ -2126,6 +2138,66 @@ async function abrirReemplazos(asignacionId) {
     }
 }
 
+function seleccionarReemplazo(asignacionId, integranteId) {
+
+    const asignaciones = window.asignacionesCronograma || [];
+    const candidatos = window.candidatosReemplazo || [];
+
+    const asignacion = asignaciones.find(
+        a => a.id === asignacionId
+    );
+
+    if (!asignacion) {
+        alert("No se encontró la asignación original.");
+        return;
+    }
+
+    const integrante = candidatos.find(
+        persona => persona.id === integranteId
+    );
+
+    if (!integrante) {
+        alert("No se encontró el candidato seleccionado.");
+        return;
+    }
+
+    const nombreOriginal =
+        asignacion.integrantes?.nombre || "la persona asignada";
+
+    const confirmar = confirm(
+        `¿Deseas seleccionar a ${integrante.nombre} como reemplazo de ${nombreOriginal}?`
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    alert(
+        `✅ Candidato seleccionado\n\n` +
+        `${integrante.nombre}\n` +
+        `${integrante.instrumento}\n` +
+        `${integrante.nivel}\n\n` +
+        `Todavía no se ha modificado el cronograma.`
+    );
+}
+
+function encontrarIntegranteEnCronograma(integranteId) {
+
+    const asignaciones = window.asignacionesCronograma || [];
+
+    for (const asignacion of asignaciones) {
+
+        if (
+            asignacion.integrante_id === integranteId &&
+            asignacion.integrantes
+        ) {
+            return asignacion.integrantes;
+        }
+
+    }
+
+    return null;
+}
 // =====================================================
 // CERRAR DETALLE
 // =====================================================
