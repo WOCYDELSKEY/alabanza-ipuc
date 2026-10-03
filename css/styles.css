@@ -999,3 +999,34 @@ footer {
         transform: rotate(360deg);
     }
 }
+
+.btn-seleccionar-reemplazo {
+    margin-left: auto;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 7px;
+    background: #2563eb;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-seleccionar-reemplazo:hover {
+    opacity: 0.9;
+}
+
+@media (max-width: 600px) {
+
+    .candidato-card {
+        flex-wrap: wrap;
+    }
+
+    .btn-seleccionar-reemplazo {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 5px;
+    }
+
+}
