@@ -818,3 +818,184 @@ footer {
     font-size: 12px;
     font-weight: 600;
 }
+
+/* =========================================
+   REEMPLAZOS
+========================================= */
+
+.btn-reemplazo {
+    margin-top: 8px;
+    padding: 9px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #f59e0b;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-reemplazo:hover {
+    opacity: 0.9;
+}
+
+.btn-volver-servicio {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 5px 0;
+    margin-bottom: 15px;
+}
+
+.reemplazo-header {
+    text-align: center;
+    padding: 10px 0 20px;
+}
+
+.reemplazo-icono {
+    font-size: 42px;
+    margin-bottom: 5px;
+}
+
+.reemplazo-header h2 {
+    margin: 5px 0;
+}
+
+.reemplazo-header p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.reemplazo-original {
+    margin-top: 15px !important;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #991b1b !important;
+}
+
+.candidatos-contenedor {
+    margin-top: 10px;
+}
+
+.candidatos-contenedor h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.cantidad-candidatos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 20px;
+    background: #e5e7eb;
+    font-size: 13px;
+}
+
+.candidato-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px;
+    margin-bottom: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+}
+
+.candidato-icono {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f3f4f6;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.candidato-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.candidato-info strong {
+    font-size: 15px;
+}
+
+.candidato-info span {
+    font-size: 13px;
+    color: #666;
+}
+
+.candidato-nivel {
+    font-weight: 600;
+}
+
+.sin-candidatos {
+    text-align: center;
+    padding: 30px 15px;
+    border-radius: 10px;
+    background: #f9fafb;
+    color: #666;
+}
+
+.sin-candidatos div {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.sin-candidatos strong {
+    display: block;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.error-reemplazo {
+    text-align: center;
+    padding: 30px 15px;
+}
+
+.error-reemplazo > div {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.reemplazo-cargando {
+    text-align: center;
+    padding: 40px 15px;
+}
+
+.reemplazo-cargando h2 {
+    margin-bottom: 8px;
+}
+
+.reemplazo-cargando p {
+    color: #666;
+}
+
+.spinner {
+    width: 35px;
+    height: 35px;
+    margin: 0 auto 15px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+    to {
+        transform: rotate(360deg);
+    }
+}
