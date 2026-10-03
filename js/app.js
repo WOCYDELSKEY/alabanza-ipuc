@@ -1657,26 +1657,38 @@ function crearDetalleRol(
         if (estado === "Pendiente") {
 
             if (telefono) {
-
-                botonWhatsApp = `
-                    <button
-                        class="btn-whatsapp"
-                        onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
-                    >
-                        📲 Enviar WhatsApp
-                    </button>
-                `;
-
+        
+                if (asignacion.reemplaza_asignacion_id) {
+        
+                    botonWhatsApp = `
+                        <button
+                            class="btn-whatsapp"
+                            onclick="event.stopPropagation(); enviarWhatsAppReemplazo('${asignacion.id}')"
+                        >
+                            📲 Avisar al reemplazo
+                        </button>`;
+        
+                } else {
+        
+                    botonWhatsApp = `
+                        <button
+                            class="btn-whatsapp"
+                            onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
+                        >
+                            📲 Enviar WhatsApp
+                        </button>`;
+        
+                }
+        
             } else {
-
+        
                 botonWhatsApp = `
                     <span class="telefono-faltante">
                         Sin teléfono registrado
-                    </span>
-                `;
-
+                    </span>`;
+        
             }
-
+        
         } else if (estado === "Confirmado") {
 
             botonWhatsApp = `
