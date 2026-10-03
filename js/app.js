@@ -1600,6 +1600,19 @@ document.addEventListener(
 // =====================================================
 // ENVIAR WHATSAPP
 // =====================================================
+function obtenerNombreRol(rol) {
+    const nombres = {
+        "Batería": "🥁 Batería",
+        "Bajo": "🎸 Bajo",
+        "Guitarra eléctrica": "🎸 Guitarra eléctrica",
+        "Piano principal": "🎹 Piano principal",
+        "Piano auxiliar": "🎹 Piano auxiliar",
+        "Voz líder": "🎤 Voz líder",
+        "Coro": "🎶 Coro"
+    };
+
+    return nombres[rol] || rol;
+}
 
 function enviarWhatsApp(asignacionId) {
 
