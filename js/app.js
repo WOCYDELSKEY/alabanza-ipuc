@@ -2138,49 +2138,211 @@ async function abrirReemplazos(asignacionId) {
     }
 }
 
-function seleccionarReemplazo(asignacionId, integranteId) {
+async function seleccionarReemplazo(asignacionId, integranteId) {
 
     const asignaciones = window.asignacionesCronograma || [];
     const candidatos = window.candidatosReemplazo || [];
 
-    const asignacion = asignaciones.find(
+    // --------------------------------------------------
+    // 1. Buscar asignación original
+    // --------------------------------------------------
+
+    const asignacionOriginal = asignaciones.find(
         a => a.id === asignacionId
     );
 
-    if (!asignacion) {
+    if (!asignacionOriginal) {
         alert("No se encontró la asignación original.");
         return;
     }
 
-    const integrante = candidatos.find(
+    // --------------------------------------------------
+    // 2. Buscar candidato
+    // --------------------------------------------------
+
+    const candidato = candidatos.find(
         persona => persona.id === integranteId
     );
 
-    if (!integrante) {
+    if (!candidato) {
         alert("No se encontró el candidato seleccionado.");
         return;
     }
 
+    // --------------------------------------------------
+    // 3. Confirmación del administrador
+    // --------------------------------------------------
+
     const nombreOriginal =
-        asignacion.integrantes?.nombre || "la persona asignada";
+        asignacionOriginal.integrantes?.nombre || "la persona asignada";
 
     const confirmar = confirm(
-        `¿Deseas seleccionar a ${integrante.nombre} como reemplazo de ${nombreOriginal}?`
+        `¿Deseas asignar a ${candidato.nombre} como reemplazo de ${nombreOriginal}?`
     );
 
     if (!confirmar) {
         return;
     }
 
-    alert(
-        `✅ Candidato seleccionado\n\n` +
-        `${integrante.nombre}\n` +
-        `${integrante.instrumento}\n` +
-        `${integrante.nivel}\n\n` +
-        `Todavía no se ha modificado el cronograma.`
-    );
-}
+    // --------------------------------------------------
+    // 4. Evitar doble reemplazo
+    // --------------------------------------------------
 
+    try {
+
+        const { data: reemplazoExistente, error: errorBusqueda } =
+            await supabaseClient
+                .from("reemplazos")
+                .select("id, estado")
+                .eq("asignacion_original_id", asignacionId)
+                .in("estado", ["Pendiente", "Asignado", "Aceptado"])
+                .maybeSingle();
+
+        if (errorBusqueda) {
+            throw errorBusqueda;
+        }
+
+        if (reemplazoExistente) {
+
+            alert(
+                "Esta asignación ya tiene un reemplazo registrado."
+            );
+
+            return;
+        }
+
+        // --------------------------------------------------
+        // 5. Crear nueva asignación para el reemplazo
+        // --------------------------------------------------
+
+        const { data: nuevaAsignacion, error: errorAsignacion } =
+            await supabaseClient
+                .from("asignaciones")
+                .insert({
+                    servicio_id: asignacionOriginal.servicio_id,
+                    integrante_id: candidato.id,
+                    rol: asignacionOriginal.rol,
+                    estado: "Pendiente",
+                    es_principal: asignacionOriginal.es_principal,
+                    reemplaza_asignacion_id: asignacionOriginal.id
+                })
+                .select(`
+                    id,
+                    servicio_id,
+                    integrante_id,
+                    rol,
+                    estado,
+                    es_principal,
+                    token_confirmacion,
+                    integrantes (
+                        id,
+                        nombre,
+                        instrumento,
+                        telefono
+                    )
+                `)
+                .single();
+
+        if (errorAsignacion) {
+            throw errorAsignacion;
+        }
+
+        // --------------------------------------------------
+        // 6. Registrar el reemplazo
+        // --------------------------------------------------
+
+        const { data: nuevoReemplazo, error: errorReemplazo } =
+            await supabaseClient
+                .from("reemplazos")
+                .insert({
+                    asignacion_original_id: asignacionOriginal.id,
+                    integrante_reemplazo_id: candidato.id,
+                    motivo: "Reemplazo solicitado",
+                    estado: "Asignado"
+                })
+                .select()
+                .single();
+
+        if (errorReemplazo) {
+
+            // Si falla el registro del reemplazo,
+            // eliminamos la nueva asignación para
+            // evitar dejar datos incompletos.
+
+            await supabaseClient
+                .from("asignaciones")
+                .delete()
+                .eq("id", nuevaAsignacion.id);
+
+            throw errorReemplazo;
+        }
+
+        // --------------------------------------------------
+        // 7. Actualizar la asignación original
+        // --------------------------------------------------
+
+        const { error: errorOriginal } =
+            await supabaseClient
+                .from("asignaciones")
+                .update({
+                    estado: "Reemplazado"
+                })
+                .eq("id", asignacionOriginal.id);
+
+        if (errorOriginal) {
+
+            // Si falla, intentamos limpiar el reemplazo
+            // que acabamos de crear.
+
+            await supabaseClient
+                .from("reemplazos")
+                .delete()
+                .eq("id", nuevoReemplazo.id);
+
+            await supabaseClient
+                .from("asignaciones")
+                .delete()
+                .eq("id", nuevaAsignacion.id);
+
+            throw errorOriginal;
+        }
+
+        // --------------------------------------------------
+        // 8. Actualizar datos locales
+        // --------------------------------------------------
+
+        asignacionOriginal.estado = "Reemplazado";
+
+        asignaciones.push(nuevaAsignacion);
+
+        window.asignacionesCronograma = asignaciones;
+
+        // --------------------------------------------------
+        // 9. Mostrar resultado
+        // --------------------------------------------------
+
+        alert(
+            `✅ Reemplazo registrado correctamente.\n\n` +
+            `${candidato.nombre} ha sido asignado como reemplazo de ${nombreOriginal}.\n\n` +
+            `Estado: Pendiente de confirmación.`
+        );
+
+        // Volver automáticamente al detalle del servicio
+        mostrarDetalleServicio(asignacionOriginal.servicio_id);
+
+    } catch (error) {
+
+        console.error(
+            "Error registrando reemplazo:",
+            error
+        );
+
+        alert(
+            "❌ No fue posible registrar el reemplazo.\n\n" +
+            "Revisa la consola para conocer el error."
+        );
+    }
+}
 function encontrarIntegranteEnCronograma(integranteId) {
 
     const asignaciones = window.asignacionesCronograma || [];
