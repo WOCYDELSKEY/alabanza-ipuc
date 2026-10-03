@@ -1654,28 +1654,50 @@ function crearDetalleRol(
 
         let botonWhatsApp = "";
 
-
-        if (telefono) {
-
-            botonWhatsApp = `
-                <button
-                    class="btn-whatsapp"
-                    onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
-                >
-                    📲 Enviar WhatsApp
-                </button>
-            `;
-
-        } else {
-
-            botonWhatsApp = `
-                <span class="telefono-faltante">
-                    Sin teléfono registrado
-                </span>
-            `;
-
-        }
-
+            if (estado === "Pendiente") {
+            
+                if (telefono) {
+            
+                    botonWhatsApp = `
+                        <button
+                            class="btn-whatsapp"
+                            onclick="event.stopPropagation(); enviarWhatsApp('${asignacion.id}')"
+                        >
+                            📲 Enviar WhatsApp
+                        </button>
+                    `;
+            
+                } else {
+            
+                    botonWhatsApp = `
+                        <span class="telefono-faltante">
+                            Sin teléfono registrado
+                        </span>
+                    `;
+            
+                }
+            
+            }
+            
+            else if (estado === "Confirmado") {
+            
+                botonWhatsApp = `
+                    <span class="participacion-confirmada">
+                        ✅ Participación confirmada
+                    </span>
+                `;
+            
+            }
+            
+            else if (estado === "No puede") {
+            
+                botonWhatsApp = `
+                    <span class="pendiente-reemplazo">
+                        🔄 Requiere reemplazo
+                    </span>
+                `;
+            
+            }
 
         // =============================================
         // AVISO DE REEMPLAZO
