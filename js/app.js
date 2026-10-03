@@ -2604,3 +2604,199 @@ Por favor confirma tu participación en el siguiente enlace:
         "_blank"
     );
 }
+
+async function enviarWhatsAppReemplazo(asignacionId) {
+
+    try {
+
+        // --------------------------------------------------
+        // 1. Buscar la asignación del reemplazo
+        // --------------------------------------------------
+
+        const { data: asignacion, error: errorAsignacion } =
+            await supabaseClient
+                .from("asignaciones")
+                .select(`
+                    id,
+                    servicio_id,
+                    integrante_id,
+                    rol,
+                    estado,
+                    token_confirmacion,
+                    reemplaza_asignacion_id,
+                    integrantes (
+                        id,
+                        nombre,
+                        telefono
+                    ),
+                    servicios (
+                        id,
+                        fecha,
+                        hora,
+                        tipo
+                    )
+                `)
+                .eq("id", asignacionId)
+                .single();
+
+        if (errorAsignacion) {
+            throw errorAsignacion;
+        }
+
+        if (!asignacion) {
+            alert("No se encontró la asignación del reemplazo.");
+            return;
+        }
+
+        // --------------------------------------------------
+        // 2. Buscar asignación original
+        // --------------------------------------------------
+
+        if (!asignacion.reemplaza_asignacion_id) {
+            alert("Esta asignación no corresponde a un reemplazo.");
+            return;
+        }
+
+        const { data: original, error: errorOriginal } =
+            await supabaseClient
+                .from("asignaciones")
+                .select(`
+                    id,
+                    integrantes (
+                        id,
+                        nombre
+                    )
+                `)
+                .eq("id", asignacion.reemplaza_asignacion_id)
+                .single();
+
+        if (errorOriginal) {
+            throw errorOriginal;
+        }
+
+        // --------------------------------------------------
+        // 3. Datos
+        // --------------------------------------------------
+
+        const nombreReemplazo =
+            asignacion.integrantes?.nombre || "hermano(a)";
+
+        const telefono =
+            asignacion.integrantes?.telefono || "";
+
+        const nombreOriginal =
+            original?.integrantes?.nombre || "el integrante asignado";
+
+        const servicio = asignacion.servicios;
+
+        if (!telefono) {
+            alert(
+                `${nombreReemplazo} no tiene un número de teléfono registrado.`
+            );
+            return;
+        }
+
+        if (!servicio) {
+            alert("No se encontró la información del servicio.");
+            return;
+        }
+
+        if (!asignacion.token_confirmacion) {
+            alert("Esta asignación no tiene token de confirmación.");
+            return;
+        }
+
+        // --------------------------------------------------
+        // 4. Formatear teléfono
+        // --------------------------------------------------
+
+        let numero = telefono.replace(/\D/g, "");
+
+        if (numero.startsWith("57")) {
+            // Ya tiene código de Colombia
+        } else if (numero.length === 10) {
+            numero = "57" + numero;
+        }
+
+        // --------------------------------------------------
+        // 5. Formatear fecha
+        // --------------------------------------------------
+
+        const fecha = new Date(
+            servicio.fecha + "T12:00:00"
+        );
+
+        const fechaTexto = fecha.toLocaleDateString(
+            "es-CO",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+            }
+        );
+
+        const fechaCapitalizada =
+            fechaTexto.charAt(0).toUpperCase() +
+            fechaTexto.slice(1);
+
+        const hora = servicio.hora.substring(0, 5);
+
+        // --------------------------------------------------
+        // 6. Crear enlace personal
+        // --------------------------------------------------
+
+        const urlConfirmacion =
+            `${window.location.origin}/confirmacion.html?token=${asignacion.token_confirmacion}`;
+
+        // --------------------------------------------------
+        // 7. Crear mensaje
+        // --------------------------------------------------
+
+        const mensaje =
+`🎵 *IPUC Líbano Central*
+
+Hola ${nombreReemplazo} 👋
+
+Has sido propuesto(a) como *reemplazo* para nuestro próximo servicio.
+
+📅 ${fechaCapitalizada}
+🕐 ${hora}
+🎶 Rol: ${obtenerNombreRol(asignacion.rol)}
+
+👤 Reemplazas a: ${nombreOriginal}
+
+Por favor confirma tu participación aquí:
+
+${urlConfirmacion}
+
+Puedes indicar si:
+
+✅ CONFIRMAS tu participación
+❌ NO PUEDES participar
+
+Dios te bendiga 🙏`;
+
+        // --------------------------------------------------
+        // 8. Abrir WhatsApp
+        // --------------------------------------------------
+
+        const urlWhatsApp =
+            `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+        window.open(
+            urlWhatsApp,
+            "_blank"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error enviando WhatsApp al reemplazo:",
+            error
+        );
+
+        alert(
+            "❌ No fue posible preparar el mensaje de WhatsApp."
+        );
+    }
+}
