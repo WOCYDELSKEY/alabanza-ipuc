@@ -798,3 +798,23 @@ footer {
     }
 
 }
+
+.participacion-confirmada {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #e8f7ee;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pendiente-reemplazo {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #fff0f0;
+    font-size: 12px;
+    font-weight: 600;
+}
