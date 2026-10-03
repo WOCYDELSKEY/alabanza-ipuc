@@ -1689,33 +1689,14 @@ function crearDetalleRol(
             
             }
             
-            else if (estado === "No puede") {
-            
+            } else if (estado === "No puede") {
                 botonWhatsApp = `
-                    <span class="pendiente-reemplazo">
-                        🔄 Requiere reemplazo
-                    </span>
-                `;
-            
+                    <button class="btn-reemplazo"
+                        onclick="event.stopPropagation(); abrirReemplazos('${asignacion.id}')">
+                        🔄 Buscar reemplazo
+                    </button>`;
             }
-
-        // =============================================
-        // AVISO DE REEMPLAZO
-        // =============================================
-
-        let avisoReemplazo = "";
-
-
-        if (estado === "No puede") {
-
-            avisoReemplazo = `
-                <div class="aviso-reemplazo">
-                    🔄 Pendiente de reemplazo
-                </div>
-            `;
-
-        }
-
+        
 
         // =============================================
         // HTML
