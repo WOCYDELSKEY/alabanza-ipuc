@@ -1679,7 +1679,7 @@ function crearDetalleRol(
                         </button>`;
         
                 }
-        
+                
             } else {
         
                 botonWhatsApp = `
@@ -1688,7 +1688,7 @@ function crearDetalleRol(
                     </span>`;
         
             }
-        
+        }
         } else if (estado === "Confirmado") {
 
             botonWhatsApp = `
