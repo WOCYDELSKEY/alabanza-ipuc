@@ -2747,35 +2747,37 @@ async function enviarWhatsAppReemplazo(asignacionId) {
         // --------------------------------------------------
 
         const urlConfirmacion =
-            `${window.location.origin}/confirmacion.html?token=${asignacion.token_confirmacion}`;
-
+            new URL(
+                `confirmacion.html?token=${asignacion.token_confirmacion}`,
+                window.location.href
+            ).href;
         // --------------------------------------------------
         // 7. Crear mensaje
         // --------------------------------------------------
 
         const mensaje =
-`🎵 *IPUC Líbano Central*
-
-Hola ${nombreReemplazo} 👋
-
-Has sido propuesto(a) como *reemplazo* para nuestro próximo servicio.
-
-📅 ${fechaCapitalizada}
-🕐 ${hora}
-🎶 Rol: ${obtenerNombreRol(asignacion.rol)}
-
-👤 Reemplazas a: ${nombreOriginal}
-
-Por favor confirma tu participación aquí:
-
-${urlConfirmacion}
-
-Puedes indicar si:
-
-✅ CONFIRMAS tu participación
-❌ NO PUEDES participar
-
-Dios te bendiga 🙏`;
+            `🎵 *IPUC Líbano Central*
+            
+            Hola ${nombreReemplazo} 👋
+            
+            Has sido propuesto(a) como *reemplazo* para nuestro próximo servicio.
+            
+            📅 ${fechaCapitalizada}
+            🕐 ${hora}
+            🎶 Rol: ${obtenerNombreRol(asignacion.rol)}
+            
+            👤 Reemplazas a: ${nombreOriginal}
+            
+            Por favor confirma tu participación aquí:
+            
+            ${urlConfirmacion}
+            
+            Puedes indicar si:
+            
+            ✅ CONFIRMAS tu participación
+            ❌ NO PUEDES participar
+            
+            Dios te bendiga 🙏`;
 
         // --------------------------------------------------
         // 8. Abrir WhatsApp
