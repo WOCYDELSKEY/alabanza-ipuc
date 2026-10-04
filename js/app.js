@@ -1632,22 +1632,22 @@ function crearDetalleRol(
 
 
         if (estado === "Confirmado") {
-
             estadoTexto = "Confirmado";
             estadoClase = "confirmado";
             estadoIcono = "🟢";
-
         }
-
-
+        
         if (estado === "No puede") {
-
             estadoTexto = "No puede";
             estadoClase = "no-puede";
             estadoIcono = "🔴";
-
         }
-
+        
+        if (estado === "Reemplazado") {
+            estadoTexto = "Reemplazado";
+            estadoClase = "reemplazado";
+            estadoIcono = "🔄";
+        }
 
         // =============================================
         // BOTÓN WHATSAPP
@@ -1691,26 +1691,26 @@ function crearDetalleRol(
             }
         
         } else if (estado === "Confirmado") {
-
             botonWhatsApp = `
                 <span class="participacion-confirmada">
                     ✅ Participación confirmada
-                </span>
-            `;
-
+                </span>`;
+        
         } else if (estado === "No puede") {
-
             botonWhatsApp = `
                 <button
                     class="btn-reemplazo"
                     onclick="event.stopPropagation(); abrirReemplazos('${asignacion.id}')"
                 >
                     🔄 Buscar reemplazo
-                </button>
-            `;
-
+                </button>`;
+        
+        } else if (estado === "Reemplazado") {
+            botonWhatsApp = `
+                <span class="reemplazo-confirmado">
+                    🔄 Reemplazo asignado
+                </span>`;
         }
-
         // =============================================
         // HTML
         // =============================================
