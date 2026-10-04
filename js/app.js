@@ -41,7 +41,7 @@ async function comprobarConexion() {
 // GENERADOR DE CRONOGRAMA
 // =========================================================
 
-async function generarCronograma() {
+async function generarCronograma(modoSimulacion = false) {
 
     console.clear();
 
@@ -138,32 +138,39 @@ async function generarCronograma() {
             .select("id, servicio_id")
             .in("servicio_id", servicioIds);
 
-    if (errorExistentes) {
+        if (errorExistentes) {
+            console.error(
+                "Error comprobando asignaciones existentes:",
+                errorExistentes
+            );
+            return;
+        }
+    
+        if (existentes.length > 0 && !modoSimulacion) {
+    
         console.error(
-            "Error comprobando asignaciones existentes:",
-            errorExistentes
+            "❌ Ya existen asignaciones para este periodo."
         );
-        return;
-    }
-
-    if (existentes.length > 0) {
-
+    
         console.error(
-            "❌ Ya existen asignaciones para octubre."
+            "Primero debes eliminarlas antes de regenerar."
         );
-
-        console.error(
-            "Primero debes eliminarlas desde Supabase antes de regenerar."
-        );
-
+    
         console.error(
             "Asignaciones existentes:",
             existentes.length
         );
-
+    
         return;
     }
-
+    
+    if (existentes.length > 0 && modoSimulacion) {
+    
+        console.log(
+            "🧪 MODO SIMULACIÓN: existen asignaciones, pero no serán modificadas."
+        );
+    
+    }
     // =====================================================
     // 3. PREPARAR ROLES
     // =====================================================
@@ -407,19 +414,39 @@ async function generarCronograma() {
 
     }
 
-    // =====================================================
-    // REGLA ACTUAL
-    // =====================================================
-    //
-    // Mientras Johan y Santiago sean aprendices,
-    // no pueden coincidir.
-    //
-    // Esta regla posteriormente la llevaremos a una
-    // tabla configurable desde la aplicación.
-    // =====================================================
+   // =====================================================
+// REGLAS DE ASIGNACIÓN
+// =====================================================
 
-    const reglaJohanSantiagoActiva = true;
+const { data: reglas, error: errorReglas } =
+    await supabaseClient
+        .from("reglas_asignacion")
+        .select("*")
+        .eq("activa", true);
 
+if (errorReglas) {
+    console.error(
+        "Error obteniendo reglas de asignación:",
+        errorReglas
+    );
+    return;
+}
+
+console.log(
+    "Reglas activas:",
+    reglas.length
+);
+
+const reglaJohanSantiago =
+    reglas.find(
+        regla =>
+            regla.tipo ===
+            "personas_no_pueden_coincidir"
+    );
+
+const reglaJohanSantiagoActiva =
+    !!reglaJohanSantiago;
+    
     // =====================================================
     // 7. GENERACIÓN
     // =====================================================
@@ -514,22 +541,27 @@ async function generarCronograma() {
                 }
 
                 // Regla actual Johan + Santiago
-                if (
-                    reglaJohanSantiagoActiva &&
-                    (
+                if (reglaJohanSantiagoActiva) {
+
+                    const integrante1 =
+                        reglaJohanSantiago.configuracion?.integrante_1;
+                
+                    const integrante2 =
+                        reglaJohanSantiago.configuracion?.integrante_2;
+                
+                    if (
                         (
-                            bajo.nombre === "Johan Díaz" &&
-                            guitarra.nombre === "Santiago Mendoza"
+                            bajo.id === integrante1 &&
+                            guitarra.id === integrante2
                         ) ||
                         (
-                            bajo.nombre === "Santiago Mendoza" &&
-                            guitarra.nombre === "Johan Díaz"
+                            bajo.id === integrante2 &&
+                            guitarra.id === integrante1
                         )
-                    )
-                ) {
-                    return;
+                    ) {
+                        return;
+                    }
                 }
-
                 parejas.push({
                     bajo,
                     guitarra
@@ -971,47 +1003,44 @@ async function generarCronograma() {
 
     if (reglaJohanSantiagoActiva) {
 
+        const integrante1 =
+            reglaJohanSantiago.configuracion?.integrante_1;
+    
+        const integrante2 =
+            reglaJohanSantiago.configuracion?.integrante_2;
+    
         for (const servicio of servicios) {
-
+    
             const asignacionesServicio =
                 todasLasAsignaciones.filter(
                     a =>
                         a.servicio_id ===
                         servicio.id
                 );
-
-            const nombres =
-                asignacionesServicio.map(
-                    a => {
-
-                        const persona =
-                            integrantes.find(
-                                p =>
-                                    p.id ===
-                                    a.integrante_id
-                            );
-
-                        return persona?.nombre;
-
-                    }
+    
+            const tiene1 =
+                asignacionesServicio.some(
+                    a =>
+                        a.integrante_id === integrante1
                 );
-
-            if (
-                nombres.includes("Johan Díaz") &&
-                nombres.includes("Santiago Mendoza")
-            ) {
-
+    
+            const tiene2 =
+                asignacionesServicio.some(
+                    a =>
+                        a.integrante_id === integrante2
+                );
+    
+            if (tiene1 && tiene2) {
+    
                 console.error(
                     "❌ REGLA VIOLADA:",
                     servicio.fecha,
-                    "Johan Díaz y Santiago Mendoza no pueden coincidir."
+                    "Dos integrantes con restricción fueron asignados juntos."
                 );
-
+    
                 return;
             }
-
         }
-
     }
 
     // =====================================================
@@ -1072,7 +1101,29 @@ async function generarCronograma() {
     console.log(
         "Guardando asignaciones..."
     );
+    if (modoSimulacion) {
 
+        console.log("");
+        console.log("=================================");
+        console.log("🧪 SIMULACIÓN COMPLETADA");
+        console.log("=================================");
+    
+        console.log(
+            "No se guardó ninguna asignación en Supabase."
+        );
+    
+        console.log(
+            "Total de asignaciones simuladas:",
+            todasLasAsignaciones.length
+        );
+    
+        console.log("");
+        console.log(
+            "Puedes revisar el resultado en la consola."
+        );
+    
+        return;
+    }
     const {
         data,
         error
