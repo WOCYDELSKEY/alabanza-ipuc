@@ -414,7 +414,7 @@ async function generarCronograma(modoSimulacion = false) {
 
     }
 
-   // =====================================================
+// =====================================================
 // REGLAS DE ASIGNACIÓN
 // =====================================================
 
@@ -425,28 +425,45 @@ const { data: reglas, error: errorReglas } =
         .eq("activa", true);
 
 if (errorReglas) {
-    console.error(
-        "Error obteniendo reglas de asignación:",
-        errorReglas
-    );
+    console.error("❌ Error obteniendo reglas de asignación:", errorReglas);
     return;
 }
 
-console.log(
-    "Reglas activas:",
-    reglas.length
+console.log("📋 Reglas activas:", reglas.length);
+
+const reglasNoCoincidencia = reglas.filter(
+    regla => regla.tipo === "personas_no_pueden_coincidir"
 );
 
-const reglaJohanSantiago =
-    reglas.find(
-        regla =>
-            regla.tipo ===
-            "personas_no_pueden_coincidir"
-    );
+console.log(
+    "🚫 Reglas de personas que no pueden coincidir:",
+    reglasNoCoincidencia.length
+);
 
-const reglaJohanSantiagoActiva =
-    !!reglaJohanSantiago;
-    
+
+// =====================================================
+// FUNCIÓN: VERIFICAR SI DOS PERSONAS PUEDEN COINCIDIR
+// =====================================================
+
+function violaReglaNoCoincidencia(integranteA, integranteB) {
+
+    return reglasNoCoincidencia.some(regla => {
+
+        const integrante1 =
+            regla.configuracion?.integrante_1;
+
+        const integrante2 =
+            regla.configuracion?.integrante_2;
+
+        return (
+            (integranteA.id === integrante1 &&
+             integranteB.id === integrante2) ||
+
+            (integranteA.id === integrante2 &&
+             integranteB.id === integrante1)
+        );
+    });
+}    
     // =====================================================
     // 7. GENERACIÓN
     // =====================================================
@@ -540,27 +557,8 @@ const reglaJohanSantiagoActiva =
                     return;
                 }
 
-                // Regla actual Johan + Santiago
-                if (reglaJohanSantiagoActiva) {
-
-                    const integrante1 =
-                        reglaJohanSantiago.configuracion?.integrante_1;
-                
-                    const integrante2 =
-                        reglaJohanSantiago.configuracion?.integrante_2;
-                
-                    if (
-                        (
-                            bajo.id === integrante1 &&
-                            guitarra.id === integrante2
-                        ) ||
-                        (
-                            bajo.id === integrante2 &&
-                            guitarra.id === integrante1
-                        )
-                    ) {
-                        return;
-                    }
+                if (violaReglaNoCoincidencia(bajo, guitarra)) {
+                    return;
                 }
                 parejas.push({
                     bajo,
@@ -998,51 +996,47 @@ const reglaJohanSantiagoActiva =
     }
 
     // =====================================================
-    // VALIDAR JOHAN + SANTIAGO
+    // VALIDAR REGLAS DE NO COINCIDENCIA
     // =====================================================
-
-    if (reglaJohanSantiagoActiva) {
-
+    
+    for (const regla of reglasNoCoincidencia) {
+    
         const integrante1 =
-            reglaJohanSantiago.configuracion?.integrante_1;
+            regla.configuracion?.integrante_1;
     
         const integrante2 =
-            reglaJohanSantiago.configuracion?.integrante_2;
+            regla.configuracion?.integrante_2;
     
         for (const servicio of servicios) {
     
             const asignacionesServicio =
                 todasLasAsignaciones.filter(
-                    a =>
-                        a.servicio_id ===
-                        servicio.id
+                    a => a.servicio_id === servicio.id
                 );
     
             const tiene1 =
                 asignacionesServicio.some(
-                    a =>
-                        a.integrante_id === integrante1
+                    a => a.integrante_id === integrante1
                 );
     
             const tiene2 =
                 asignacionesServicio.some(
-                    a =>
-                        a.integrante_id === integrante2
+                    a => a.integrante_id === integrante2
                 );
     
             if (tiene1 && tiene2) {
     
                 console.error(
                     "❌ REGLA VIOLADA:",
-                    servicio.fecha,
-                    "Dos integrantes con restricción fueron asignados juntos."
+                    regla.nombre,
+                    "→",
+                    servicio.fecha
                 );
     
                 return;
             }
         }
     }
-
     // =====================================================
     // 9. VALIDAR ROLES REALES
     // =====================================================
