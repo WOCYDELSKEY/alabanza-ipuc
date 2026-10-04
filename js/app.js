@@ -64,6 +64,20 @@ async function generarCronograma() {
         return;
     }
 
+    const { data: rolesIntegrantes, error: errorRoles } =
+        await supabaseClient
+            .from("roles_integrantes")
+            .select("*")
+            .eq("activo", true);
+
+    if (errorRoles) {
+        console.error(
+            "Error obteniendo roles de integrantes:",
+            errorRoles
+        );
+        return;
+    }
+
     const { data: disponibilidades, error: errorDisponibilidad } =
         await supabaseClient
             .from("disponibilidad_integrantes")
@@ -87,23 +101,30 @@ async function generarCronograma() {
             .order("fecha");
 
     if (errorServicios) {
-        console.error("Error obteniendo servicios:", errorServicios);
+        console.error(
+            "Error obteniendo servicios:",
+            errorServicios
+        );
         return;
     }
 
     console.log("Integrantes:", integrantes.length);
+    console.log("Roles:", rolesIntegrantes.length);
     console.log("Servicios:", servicios.length);
 
     if (integrantes.length !== 24) {
-        console.error("❌ Deben existir exactamente 24 integrantes.");
+        console.error(
+            "❌ Deben existir exactamente 24 integrantes."
+        );
         return;
     }
 
     if (servicios.length !== 14) {
-        console.error("❌ Deben existir exactamente 14 servicios.");
+        console.error(
+            "❌ Deben existir exactamente 14 servicios."
+        );
         return;
     }
-
 
     // =====================================================
     // 2. COMPROBAR SI YA EXISTE UN CRONOGRAMA
@@ -143,9 +164,24 @@ async function generarCronograma() {
         return;
     }
 
+    // =====================================================
+    // 3. PREPARAR ROLES
+    // =====================================================
+
+    const rolesPorIntegrante = {};
+
+    rolesIntegrantes.forEach(rol => {
+
+        if (!rolesPorIntegrante[rol.integrante_id]) {
+            rolesPorIntegrante[rol.integrante_id] = [];
+        }
+
+        rolesPorIntegrante[rol.integrante_id].push(rol);
+
+    });
 
     // =====================================================
-    // 3. DISPONIBILIDAD
+    // 4. DISPONIBILIDAD
     // =====================================================
 
     const disponibilidad = {};
@@ -158,11 +194,11 @@ async function generarCronograma() {
 
         disponibilidad[d.integrante_id][d.dia_semana] =
             d.disponible;
+
     });
 
-
     // =====================================================
-    // 4. CONTADORES
+    // 5. CONTADORES
     // =====================================================
 
     const participaciones = {};
@@ -184,9 +220,8 @@ async function generarCronograma() {
 
     });
 
-
     // =====================================================
-    // 5. FUNCIONES AUXILIARES
+    // 6. FUNCIONES AUXILIARES
     // =====================================================
 
     function diaSemana(fecha) {
@@ -195,24 +230,70 @@ async function generarCronograma() {
             new Date(fecha + "T12:00:00");
 
         return fechaLocal.getDay();
-    }
 
+    }
 
     function estaDisponible(persona, servicio) {
 
         const dia = diaSemana(servicio.fecha);
 
         return disponibilidad[persona.id]?.[dia] === true;
-    }
 
+    }
 
     function estaAsignado(persona, asignados) {
 
         return asignados.some(
             a => a.integrante_id === persona.id
         );
+
     }
 
+    function tieneRol(persona, rol) {
+
+        return (
+            rolesPorIntegrante[persona.id]
+                ?.some(r =>
+                    r.rol === rol
+                )
+        );
+
+    }
+
+    function puedeSerPrincipal(persona, rol) {
+
+        return (
+            rolesPorIntegrante[persona.id]
+                ?.some(r =>
+                    r.rol === rol &&
+                    r.puede_ser_principal === true
+                )
+        );
+
+    }
+
+    function puedeSerAuxiliar(persona, rol) {
+
+        return (
+            rolesPorIntegrante[persona.id]
+                ?.some(r =>
+                    r.rol === rol &&
+                    r.puede_ser_auxiliar === true
+                )
+        );
+
+    }
+
+    function puedeSerLider(persona) {
+
+        return (
+            rolesPorIntegrante[persona.id]
+                ?.some(r =>
+                    r.puede_ser_lider === true
+                )
+        );
+
+    }
 
     function ordenarPorParticipacion(lista) {
 
@@ -235,25 +316,53 @@ async function generarCronograma() {
 
     }
 
-
-    function obtenerCandidatos(
-        instrumento,
+    function obtenerCandidatosRol(
+        rol,
         servicio,
-        asignados
+        asignados,
+        opciones = {}
     ) {
 
-        return integrantes.filter(persona =>
+        const {
+            principal = false,
+            auxiliar = false,
+            lider = false
+        } = opciones;
 
-            persona.instrumento === instrumento &&
+        return integrantes.filter(persona => {
 
-            estaDisponible(persona, servicio) &&
+            if (!tieneRol(persona, rol)) {
+                return false;
+            }
 
-            !estaAsignado(persona, asignados)
+            if (!estaDisponible(persona, servicio)) {
+                return false;
+            }
 
-        );
+            if (estaAsignado(persona, asignados)) {
+                return false;
+            }
+
+            if (principal &&
+                !puedeSerPrincipal(persona, rol)) {
+                return false;
+            }
+
+            if (auxiliar &&
+                !puedeSerAuxiliar(persona, rol)) {
+                return false;
+            }
+
+            if (lider &&
+                !puedeSerLider(persona)) {
+                return false;
+            }
+
+            return true;
+
+        });
 
     }
-
 
     function registrar(
         persona,
@@ -267,7 +376,6 @@ async function generarCronograma() {
         });
 
         participaciones[persona.id]++;
-
 
         if (rol === "Batería") {
             participacionesPorRol[persona.id].bateria++;
@@ -299,15 +407,26 @@ async function generarCronograma() {
 
     }
 
+    // =====================================================
+    // REGLA ACTUAL
+    // =====================================================
+    //
+    // Mientras Johan y Santiago sean aprendices,
+    // no pueden coincidir.
+    //
+    // Esta regla posteriormente la llevaremos a una
+    // tabla configurable desde la aplicación.
+    // =====================================================
+
+    const reglaJohanSantiagoActiva = true;
 
     // =====================================================
-    // 6. GENERACIÓN
+    // 7. GENERACIÓN
     // =====================================================
 
     const todasLasAsignaciones = [];
 
     let errores = [];
-
 
     for (
         let indiceServicio = 0;
@@ -324,19 +443,20 @@ async function generarCronograma() {
         );
         console.log("---------------------------------");
 
-
         const asignados = [];
-
 
         // =================================================
         // BATERÍA
         // =================================================
 
         let candidatos =
-            obtenerCandidatos(
+            obtenerCandidatosRol(
                 "Batería",
                 servicio,
-                asignados
+                asignados,
+                {
+                    principal: true
+                }
             );
 
         candidatos =
@@ -359,95 +479,65 @@ async function generarCronograma() {
             asignados
         );
 
-
         // =================================================
         // BAJO + GUITARRA
         // =================================================
-        //
-        // Se seleccionan como PAREJA.
-        //
-        // Permitidas:
-        //
-        // Arquimedes + Santiago
-        // Arquimedes + Wolfran
-        // Johan + Wolfran
-        //
-        // PROHIBIDA:
-        //
-        // Johan + Santiago
-        // =================================================
 
-        const arquimedes =
-            integrantes.find(
-                p => p.nombre === "Arquimedes Esquivel"
+        let candidatosBajo =
+            obtenerCandidatosRol(
+                "Bajo",
+                servicio,
+                asignados,
+                {
+                    principal: true
+                }
             );
 
-        const johan =
-            integrantes.find(
-                p => p.nombre === "Johan Díaz"
+        let candidatosGuitarra =
+            obtenerCandidatosRol(
+                "Guitarra eléctrica",
+                servicio,
+                asignados,
+                {
+                    principal: true
+                }
             );
-
-        const wolfran =
-            integrantes.find(
-                p => p.nombre === "Wolfran Castañeda"
-            );
-
-        const santiago =
-            integrantes.find(
-                p => p.nombre === "Santiago Mendoza"
-            );
-
 
         const parejas = [];
 
+        candidatosBajo.forEach(bajo => {
 
-        // Arquimedes + Santiago
-        if (
-            arquimedes &&
-            santiago &&
-            estaDisponible(arquimedes, servicio) &&
-            estaDisponible(santiago, servicio)
-        ) {
+            candidatosGuitarra.forEach(guitarra => {
 
-            parejas.push({
-                bajo: arquimedes,
-                guitarra: santiago
+                if (bajo.id === guitarra.id) {
+                    return;
+                }
+
+                // Regla actual Johan + Santiago
+                if (
+                    reglaJohanSantiagoActiva &&
+                    (
+                        (
+                            bajo.nombre === "Johan Díaz" &&
+                            guitarra.nombre === "Santiago Mendoza"
+                        ) ||
+                        (
+                            bajo.nombre === "Santiago Mendoza" &&
+                            guitarra.nombre === "Johan Díaz"
+                        )
+                    )
+                ) {
+                    return;
+                }
+
+                parejas.push({
+                    bajo,
+                    guitarra
+                });
+
             });
 
-        }
-
-
-        // Arquimedes + Wolfran
-        if (
-            arquimedes &&
-            wolfran &&
-            estaDisponible(arquimedes, servicio) &&
-            estaDisponible(wolfran, servicio)
-        ) {
-
-            parejas.push({
-                bajo: arquimedes,
-                guitarra: wolfran
-            });
-
-        }
-
-
-        // Johan + Wolfran
-        if (
-            johan &&
-            wolfran &&
-            estaDisponible(johan, servicio) &&
-            estaDisponible(wolfran, servicio)
-        ) {
-
-            parejas.push({
-                bajo: johan,
-                guitarra: wolfran
-            });
-
-        }
-
+        });
 
         if (parejas.length === 0) {
 
@@ -458,8 +548,6 @@ async function generarCronograma() {
             continue;
         }
 
-
-        // Elegimos la pareja con menor participación
         parejas.sort((a, b) => {
 
             const totalA =
@@ -474,9 +562,7 @@ async function generarCronograma() {
 
         });
 
-
         const pareja = parejas[0];
-
 
         registrar(
             pareja.bajo,
@@ -490,25 +576,19 @@ async function generarCronograma() {
             asignados
         );
 
-
         // =================================================
         // VOZ LÍDER
         // =================================================
 
         let lideres =
-            integrantes.filter(persona =>
-
-                persona.puede_ser_lider === true &&
-
-                estaDisponible(persona, servicio) &&
-
-                !estaAsignado(persona, asignados)
-
+            obtenerCandidatosRol(
+                "Voz líder",
+                servicio,
+                asignados,
+                {
+                    lider: true
+                }
             );
-
-
-        // Primero buscamos quien tenga menos servicios
-        // como líder, no menos participaciones totales.
 
         lideres.sort((a, b) => {
 
@@ -525,9 +605,7 @@ async function generarCronograma() {
 
         });
 
-
         const lider = lideres[0];
-
 
         if (!lider) {
 
@@ -538,80 +616,38 @@ async function generarCronograma() {
             continue;
         }
 
-
         registrar(
             lider,
             "Voz líder",
             asignados
         );
 
-
         // =================================================
         // PIANO PRINCIPAL
         // =================================================
 
         let pianos =
-            obtenerCandidatos(
+            obtenerCandidatosRol(
                 "Piano",
                 servicio,
-                asignados
+                asignados,
+                {
+                    principal: true
+                }
             );
 
-
-        // Si Oscar lidera → Nicol piano
-        if (
-            lider.nombre ===
-            "Oscar Julián Díaz"
-        ) {
-
-            pianos =
-                pianos.filter(
-                    p =>
-                        p.nombre ===
-                        "Nicol Pineda"
-                );
-
-        }
-
-
-        // Si Nicol lidera → Oscar piano
-        else if (
-            lider.nombre ===
-            "Nicol Pineda"
-        ) {
-
-            pianos =
-                pianos.filter(
-                    p =>
-                        p.nombre ===
-                        "Oscar Julián Díaz"
-                );
-
-        }
-
-
-        // Si Mayerly lidera → Oscar o Nicol
-        else {
-
-            pianos =
-                pianos.filter(
-                    p =>
-                        p.nombre ===
-                        "Oscar Julián Díaz" ||
-
-                        p.nombre ===
-                        "Nicol Pineda"
-                );
-
-        }
-
+        /*
+         * Como el líder ya fue registrado en asignados,
+         * automáticamente queda excluido del piano.
+         *
+         * Esto reemplaza la lógica anterior que dependía
+         * de los nombres de Oscar, Nicol y Mayerly.
+         */
 
         pianos =
             ordenarPorParticipacion(pianos);
 
-
         const piano = pianos[0];
-
 
         if (!piano) {
 
@@ -622,76 +658,76 @@ async function generarCronograma() {
             continue;
         }
 
-
         registrar(
             piano,
             "Piano principal",
             asignados
         );
 
-
         // =================================================
         // PIANO AUXILIAR
         // =================================================
-        //
-        // Juan José es aprendiz y auxiliar.
-        //
-        // Lo utilizamos aproximadamente en la mitad
-        // de los servicios para darle participación,
-        // pero NO es obligatorio.
-        // =================================================
 
-        const juanJose =
-            integrantes.find(
-                p =>
-                    p.nombre ===
-                    "Juan José Restrepo"
+        /*
+         * Buscamos personas que tengan Piano como rol
+         * y puedan desempeñarse como auxiliares.
+         *
+         * Ya no dependemos exclusivamente de Juan José.
+         */
+
+        let auxiliares =
+            obtenerCandidatosRol(
+                "Piano",
+                servicio,
+                asignados,
+                {
+                    auxiliar: true
+                }
             );
 
+        auxiliares =
+            ordenarPorParticipacion(auxiliares);
+
+        /*
+         * Conservamos aproximadamente la mitad de los
+         * servicios con piano auxiliar.
+         */
 
         const usarAuxiliar =
             indiceServicio % 2 === 1;
 
-
         if (
             usarAuxiliar &&
-            juanJose &&
-            estaDisponible(juanJose, servicio) &&
-            !estaAsignado(juanJose, asignados)
+            auxiliares.length > 0
         ) {
 
+            const auxiliar =
+                auxiliares[0];
+
             registrar(
-                juanJose,
+                auxiliar,
                 "Piano auxiliar",
                 asignados
             );
 
         }
 
-
         // =================================================
         // COROS
         // =================================================
 
         let coristas =
-            integrantes.filter(persona =>
-
-                persona.instrumento === "Coro" &&
-
-                estaDisponible(persona, servicio) &&
-
-                !estaAsignado(persona, asignados)
-
+            obtenerCandidatosRol(
+                "Coro",
+                servicio,
+                asignados
             );
-
 
         coristas =
             ordenarPorParticipacion(coristas);
 
-
         const seleccionCoros =
             coristas.slice(0, 3);
-
 
         if (seleccionCoros.length !== 3) {
 
@@ -702,7 +738,6 @@ async function generarCronograma() {
             continue;
         }
 
-
         seleccionCoros.forEach(coro => {
 
             registrar(
@@ -712,7 +747,6 @@ async function generarCronograma() {
             );
 
         });
-
 
         // =================================================
         // GUARDAR EN MEMORIA
@@ -741,7 +775,6 @@ async function generarCronograma() {
             });
 
         });
-
 
         // =================================================
         // MOSTRAR SERVICIO
@@ -772,19 +805,33 @@ async function generarCronograma() {
             piano.nombre
         );
 
-        console.log(
-            "🎹 Auxiliar:",
-            juanJose &&
-            asignados.some(
+        const auxiliarAsignado =
+            asignados.find(
                 a =>
-                    a.integrante_id ===
-                    juanJose.id &&
-                    a.rol ===
-                    "Piano auxiliar"
-            )
-                ? juanJose.nombre
-                : "Ninguno"
-        );
+                    a.rol === "Piano auxiliar"
+            );
+
+        if (auxiliarAsignado) {
+
+            const personaAuxiliar =
+                integrantes.find(
+                    p =>
+                        p.id ===
+                        auxiliarAsignado.integrante_id
+                );
+
+            console.log(
+                "🎹 Auxiliar:",
+                personaAuxiliar?.nombre
+            );
+
+        } else {
+
+            console.log(
+                "🎹 Auxiliar: Ninguno"
+            );
+
+        }
 
         console.log(
             "🎶 Coros:",
@@ -795,16 +842,14 @@ async function generarCronograma() {
 
     }
 
-
     // =====================================================
-    // 7. VALIDACIÓN GENERAL
+    // 8. VALIDACIÓN GENERAL
     // =====================================================
 
     console.log("");
     console.log("=================================");
     console.log("VALIDANDO CRONOGRAMA");
     console.log("=================================");
-
 
     if (errores.length > 0) {
 
@@ -823,27 +868,12 @@ async function generarCronograma() {
         return;
     }
 
-
     // =====================================================
     // VALIDAR CANTIDAD
     // =====================================================
 
-    // 8 roles obligatorios:
-    //
-    // batería
-    // bajo
-    // guitarra
-    // piano principal
-    // líder
-    // 3 coros
-    //
-    // = 8 asignaciones por servicio
-    //
-    // Piano auxiliar es opcional.
-
     const minimoEsperado =
         servicios.length * 8;
-
 
     if (
         todasLasAsignaciones.length <
@@ -856,7 +886,6 @@ async function generarCronograma() {
 
         return;
     }
-
 
     // =====================================================
     // VALIDAR DUPLICADOS
@@ -871,17 +900,14 @@ async function generarCronograma() {
                     servicio.id
             );
 
-
         const personas =
             asignacionesServicio.map(
                 a =>
                     a.integrante_id
             );
 
-
         const personasUnicas =
             new Set(personas);
-
 
         if (
             personas.length !==
@@ -896,12 +922,10 @@ async function generarCronograma() {
             return;
         }
 
-
         const roles =
             asignacionesServicio.map(
                 a => a.rol
             );
-
 
         const rolesObligatorios = [
             "Batería",
@@ -912,7 +936,6 @@ async function generarCronograma() {
             "Coro"
         ];
 
-
         for (
             const rol of rolesObligatorios
         ) {
@@ -922,12 +945,10 @@ async function generarCronograma() {
                     r => r === rol
                 ).length;
 
-
             const esperado =
                 rol === "Coro"
                     ? 3
                     : 1;
-
 
             if (
                 cantidad !== esperado
@@ -944,47 +965,95 @@ async function generarCronograma() {
 
     }
 
+    // =====================================================
+    // VALIDAR JOHAN + SANTIAGO
+    // =====================================================
+
+    if (reglaJohanSantiagoActiva) {
+
+        for (const servicio of servicios) {
+
+            const asignacionesServicio =
+                todasLasAsignaciones.filter(
+                    a =>
+                        a.servicio_id ===
+                        servicio.id
+                );
+
+            const nombres =
+                asignacionesServicio.map(
+                    a => {
+
+                        const persona =
+                            integrantes.find(
+                                p =>
+                                    p.id ===
+                                    a.integrante_id
+                            );
+
+                        return persona?.nombre;
+
+                    }
+                );
+
+            if (
+                nombres.includes("Johan Díaz") &&
+                nombres.includes("Santiago Mendoza")
+            ) {
+
+                console.error(
+                    "❌ REGLA VIOLADA:",
+                    servicio.fecha,
+                    "Johan Díaz y Santiago Mendoza no pueden coincidir."
+                );
+
+                return;
+            }
+
+        }
+
+    }
 
     // =====================================================
-    // 8. VALIDAR JOHAN + SANTIAGO
+    // 9. VALIDAR ROLES REALES
     // =====================================================
 
-    for (const servicio of servicios) {
+    for (const asignacion of todasLasAsignaciones) {
 
-        const asignacionesServicio =
-            todasLasAsignaciones.filter(
-                a =>
-                    a.servicio_id ===
-                    servicio.id
-            );
+        const rolesPersona =
+            rolesPorIntegrante[
+                asignacion.integrante_id
+            ] || [];
 
-
-        const nombres =
-            asignacionesServicio.map(
-                a => {
-
-                    const persona =
-                        integrantes.find(
-                            p =>
-                                p.id ===
-                                a.integrante_id
-                        );
-
-                    return persona?.nombre;
-
-                }
-            );
-
+        let rolBase =
+            asignacion.rol;
 
         if (
-            nombres.includes("Johan Díaz") &&
-            nombres.includes("Santiago Mendoza")
+            rolBase === "Piano principal" ||
+            rolBase === "Piano auxiliar"
         ) {
+            rolBase = "Piano";
+        }
+
+        const tieneElRol =
+            rolesPersona.some(
+                r =>
+                    r.rol === rolBase
+            );
+
+        if (!tieneElRol) {
+
+            const persona =
+                integrantes.find(
+                    p =>
+                        p.id ===
+                        asignacion.integrante_id
+                );
 
             console.error(
-                "❌ REGLA VIOLADA:",
-                servicio.fecha,
-                "Johan Díaz y Santiago Mendoza no pueden coincidir."
+                "❌ Persona asignada a un rol que no posee:",
+                persona?.nombre,
+                asignacion.rol
             );
 
             return;
@@ -992,9 +1061,8 @@ async function generarCronograma() {
 
     }
 
-
     // =====================================================
-    // 9. GUARDAR
+    // 10. GUARDAR
     // =====================================================
 
     console.log(
@@ -1004,7 +1072,6 @@ async function generarCronograma() {
     console.log(
         "Guardando asignaciones..."
     );
-
 
     const {
         data,
@@ -1017,7 +1084,6 @@ async function generarCronograma() {
             )
             .select();
 
-
     if (error) {
 
         console.error(
@@ -1028,9 +1094,8 @@ async function generarCronograma() {
         return;
     }
 
-
     // =====================================================
-    // 10. RESUMEN
+    // 11. RESUMEN
     // =====================================================
 
     console.log("");
@@ -1053,8 +1118,7 @@ async function generarCronograma() {
         "PARTICIPACIONES:"
     );
 
-
-    integrantes
+    [...integrantes]
         .sort(
             (a, b) =>
                 participaciones[b.id] -
@@ -1068,7 +1132,6 @@ async function generarCronograma() {
 
         });
 
-
     console.log("");
     console.log(
         "================================="
@@ -1080,10 +1143,8 @@ async function generarCronograma() {
 
     console.log(
         "================================="
-
     );
 }
-
 // =========================================================
 // NAVEGACIÓN TEMPORAL
 // =========================================================
