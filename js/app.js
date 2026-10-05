@@ -2314,16 +2314,7 @@ async function abrirReemplazos(asignacionId) {
 
         console.log("📋 Reglas utilizadas para reemplazos:", reglas);
 
-        const personasAsignadas =
-            asignacionesServicio
-                .map(asignacion => asignacion.integrantes)
-                .filter(Boolean);
-        
-        console.log(
-            "👥 Personas ya asignadas:",
-            personasAsignadas.map(p => p.nombre)
-        );
-        
+                
         // --------------------------------------------------
         // 4. Información del rol a reemplazar
         // --------------------------------------------------
