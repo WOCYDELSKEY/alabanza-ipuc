@@ -2273,7 +2273,12 @@ async function abrirReemplazos(asignacionId) {
                 .from("disponibilidad_integrantes")
                 .select(`
                     integrante_id,
-                    disponible
+                    disponible,
+                    integrantes (
+                        id,
+                        nombre,
+                        instrumento
+                    )
                 `)
                 .eq("dia_semana", diaSemana)
                 .eq("disponible", true);
@@ -2305,6 +2310,20 @@ async function abrirReemplazos(asignacionId) {
             a => a.id !== asignacionId
         );
 
+        const reglas = await obtenerReglasAsignacion();
+
+        console.log("📋 Reglas utilizadas para reemplazos:", reglas);
+
+        const personasAsignadas =
+            asignacionesServicio
+                .map(asignacion => asignacion.integrantes)
+                .filter(Boolean);
+        
+        console.log(
+            "👥 Personas ya asignadas:",
+            personasAsignadas.map(p => p.nombre)
+        );
+        
         // --------------------------------------------------
         // 4. Información del rol a reemplazar
         // --------------------------------------------------
@@ -2413,7 +2432,24 @@ async function abrirReemplazos(asignacionId) {
                     return false;
                 }
             }
-
+            const validacion = validarAsignacion(
+                candidato,
+                servicio,
+                asignacionOriginal.rol,
+                asignacionesServicio,
+                reglas
+            );
+            
+            if (!validacion.permitido) {
+            
+                console.log(
+                    `🚫 ${candidato.nombre} descartado:`,
+                    validacion.motivo
+                );
+            
+                return false;
+            }
+            
             // --------------------------------------------------
             // REGLA JOHAN + SANTIAGO
             // --------------------------------------------------
