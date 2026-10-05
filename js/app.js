@@ -59,6 +59,166 @@ async function obtenerReglasAsignacion() {
     return reglas || [];
 }
 
+// =====================================================
+// VERIFICAR REGLAS DE NO COINCIDENCIA
+// =====================================================
+
+function violaReglaNoCoincidencia(
+    candidato,
+    persona,
+    reglas
+) {
+
+    const reglasNoCoincidencia =
+        reglas.filter(
+            regla =>
+                regla.tipo ===
+                "personas_no_pueden_coincidir"
+        );
+
+    return reglasNoCoincidencia.some(regla => {
+
+        const integrante1 =
+            regla.configuracion?.integrante_1;
+
+        const integrante2 =
+            regla.configuracion?.integrante_2;
+
+        return (
+            (
+                candidato.id === integrante1 &&
+                persona.id === integrante2
+            ) ||
+            (
+                candidato.id === integrante2 &&
+                persona.id === integrante1
+            )
+        );
+    });
+}
+
+
+// =====================================================
+// VALIDAR UNA POSIBLE ASIGNACIÓN
+// =====================================================
+
+function validarAsignacion(
+    candidato,
+    servicio,
+    rol,
+    asignacionesActuales,
+    reglas
+) {
+
+    // -------------------------------------------------
+    // 1. NO PUEDE TENER DOS ROLES EN EL MISMO SERVICIO
+    // -------------------------------------------------
+
+    const reglaRolesDuplicados =
+        reglas.find(
+            regla =>
+                regla.tipo ===
+                "sin_roles_duplicados"
+        );
+
+    if (reglaRolesDuplicados) {
+
+        const yaAsignado =
+            asignacionesActuales.some(
+                asignacion =>
+                    asignacion.integrante_id ===
+                    candidato.id
+            );
+
+        if (yaAsignado) {
+
+            return {
+                permitido: false,
+                motivo:
+                    "La persona ya tiene otro rol en este servicio."
+            };
+        }
+    }
+
+
+    // -------------------------------------------------
+    // 2. PERSONAS QUE NO PUEDEN COINCIDIR
+    // -------------------------------------------------
+
+    const personasAsignadas =
+        asignacionesActuales
+            .map(asignacion =>
+                asignacion.integrantes
+            )
+            .filter(Boolean);
+
+    for (const persona of personasAsignadas) {
+
+        if (
+            violaReglaNoCoincidencia(
+                candidato,
+                persona,
+                reglas
+            )
+        ) {
+
+            return {
+                permitido: false,
+                motivo:
+                    `${candidato.nombre} no puede coincidir con ${persona.nombre}.`
+            };
+        }
+    }
+
+
+    // -------------------------------------------------
+    // 3. EL LÍDER NO PUEDE TOCAR PIANO
+    // -------------------------------------------------
+
+    const reglaLiderPiano =
+        reglas.find(
+            regla =>
+                regla.tipo ===
+                "lider_no_puede_tocar_piano"
+        );
+
+    if (
+        reglaLiderPiano &&
+        (
+            rol === "Piano principal" ||
+            rol === "Piano auxiliar"
+        )
+    ) {
+
+        const esLider =
+            asignacionesActuales.some(
+                asignacion =>
+                    asignacion.integrante_id ===
+                    candidato.id &&
+                    asignacion.rol ===
+                    "Voz líder"
+            );
+
+        if (esLider) {
+
+            return {
+                permitido: false,
+                motivo:
+                    "El líder no puede tocar piano en el mismo servicio."
+            };
+        }
+    }
+
+
+    // -------------------------------------------------
+    // TODO CORRECTO
+    // -------------------------------------------------
+
+    return {
+        permitido: true,
+        motivo: null
+    };
+}
 
 // =========================================================
 // GENERADOR DE CRONOGRAMA
