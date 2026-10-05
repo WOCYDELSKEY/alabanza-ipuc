@@ -35,6 +35,29 @@ async function comprobarConexion() {
 
     return true;
 }
+// =====================================================
+// MOTOR CENTRAL DE VALIDACIÓN DE ASIGNACIONES
+// =====================================================
+
+async function obtenerReglasAsignacion() {
+
+    const { data: reglas, error } =
+        await supabaseClient
+            .from("reglas_asignacion")
+            .select("*")
+            .eq("activa", true);
+
+    if (error) {
+        console.error(
+            "❌ Error obteniendo reglas de asignación:",
+            error
+        );
+
+        return [];
+    }
+
+    return reglas || [];
+}
 
 
 // =========================================================
@@ -439,29 +462,6 @@ console.log(
     "🚫 Reglas de personas que no pueden coincidir:",
     reglasNoCoincidencia.length
 );
-// =====================================================
-// MOTOR CENTRAL DE VALIDACIÓN DE ASIGNACIONES
-// =====================================================
-
-async function obtenerReglasAsignacion() {
-
-    const { data: reglas, error } =
-        await supabaseClient
-            .from("reglas_asignacion")
-            .select("*")
-            .eq("activa", true);
-
-    if (error) {
-        console.error(
-            "❌ Error obteniendo reglas de asignación:",
-            error
-        );
-
-        return [];
-    }
-
-    return reglas || [];
-}
 
 
 // =====================================================
