@@ -507,53 +507,102 @@ async function generarCronograma(modoSimulacion = false) {
     }
 
     function obtenerCandidatosRol(
-        rol,
-        servicio,
-        asignados,
-        opciones = {}
-    ) {
-
-        const {
-            principal = false,
-            auxiliar = false,
-            lider = false
-        } = opciones;
-
-        return integrantes.filter(persona => {
-
-            if (!tieneRol(persona, rol)) {
-                return false;
-            }
-
-            if (!estaDisponible(persona, servicio)) {
-                return false;
-            }
-
-            if (estaAsignado(persona, asignados)) {
-                return false;
-            }
-
-            if (principal &&
-                !puedeSerPrincipal(persona, rol)) {
-                return false;
-            }
-
-            if (auxiliar &&
-                !puedeSerAuxiliar(persona, rol)) {
-                return false;
-            }
-
-            if (lider &&
-                !puedeSerLider(persona)) {
-                return false;
-            }
-
-            return true;
-
-        });
-
-    }
-
+            rol,
+            servicio,
+            asignados,
+            opciones = {}
+        ) {
+        
+            const {
+                principal = false,
+                auxiliar = false,
+                lider = false
+            } = opciones;
+        
+            return integrantes.filter(persona => {
+        
+                // ==========================================
+                // 1. DEBE TENER EL ROL
+                // ==========================================
+        
+                if (!tieneRol(persona, rol)) {
+                    return false;
+                }
+        
+                // ==========================================
+                // 2. DEBE ESTAR DISPONIBLE
+                // ==========================================
+        
+                if (!estaDisponible(persona, servicio)) {
+                    return false;
+                }
+        
+                // ==========================================
+                // 3. NO PUEDE ESTAR YA ASIGNADO
+                // ==========================================
+        
+                if (estaAsignado(persona, asignados)) {
+                    return false;
+                }
+        
+                // ==========================================
+                // 4. PRINCIPAL
+                // ==========================================
+        
+                if (
+                    principal &&
+                    !puedeSerPrincipal(persona, rol)
+                ) {
+                    return false;
+                }
+        
+                // ==========================================
+                // 5. AUXILIAR
+                // ==========================================
+        
+                if (
+                    auxiliar &&
+                    !puedeSerAuxiliar(persona, rol)
+                ) {
+                    return false;
+                }
+        
+                // ==========================================
+                // 6. LÍDER
+                // ==========================================
+        
+                if (
+                    lider &&
+                    !puedeSerLider(persona)
+                ) {
+                    return false;
+                }
+        
+                // ==========================================
+                // 7. REGLAS DINÁMICAS
+                // ==========================================
+        
+                const validacion = validarAsignacion(
+                    persona,
+                    servicio,
+                    rol,
+                    asignados,
+                    reglas
+                );
+        
+                if (!validacion.permitido) {
+        
+                    console.log(
+                        `🚫 ${persona.nombre} descartado para ${rol}:`,
+                        validacion.motivo
+                    );
+        
+                    return false;
+                }
+        
+                return true;
+            });
+        }
     function registrar(
         persona,
         rol,
@@ -624,43 +673,6 @@ console.log(
 );
 
 
-// =====================================================
-// VERIFICAR REGLAS DE NO COINCIDENCIA
-// =====================================================
-
-function violaReglaNoCoincidencia(
-    candidato,
-    persona,
-    reglas
-) {
-
-    const reglasNoCoincidencia =
-        reglas.filter(
-            regla =>
-                regla.tipo ===
-                "personas_no_pueden_coincidir"
-        );
-
-    return reglasNoCoincidencia.some(regla => {
-
-        const integrante1 =
-            regla.configuracion?.integrante_1;
-
-        const integrante2 =
-            regla.configuracion?.integrante_2;
-
-        return (
-            (
-                candidato.id === integrante1 &&
-                persona.id === integrante2
-            ) ||
-            (
-                candidato.id === integrante2 &&
-                persona.id === integrante1
-            )
-        );
-    });
-}
 
 
 // =====================================================
@@ -901,7 +913,27 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
                     return;
                 }
 
-                if (violaReglaNoCoincidencia(bajo, guitarra)) {
+                const validacionBajoGuitarra = validarAsignacion(
+                    guitarra,
+                    servicio,
+                    "Guitarra eléctrica",
+                    [
+                        {
+                            integrante_id: bajo.id,
+                            integrantes: bajo,
+                            rol: "Bajo"
+                        }
+                    ],
+                    reglas
+                );
+                
+                if (!validacionBajoGuitarra.permitido) {
+                
+                    console.log(
+                        `🚫 Pareja descartada: ${bajo.nombre} + ${guitarra.nombre}`,
+                        validacionBajoGuitarra.motivo
+                    );
+                
                     return;
                 }
                 parejas.push({
