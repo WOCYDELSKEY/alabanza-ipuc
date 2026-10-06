@@ -2310,10 +2310,7 @@ async function abrirReemplazos(asignacionId) {
             a => a.id !== asignacionId
         );
 
-        const reglas = await obtenerReglasAsignacion();
-
-        console.log("📋 Reglas utilizadas para reemplazos:", reglas);
-
+        
                 
         // --------------------------------------------------
         // 4. Información del rol a reemplazar
@@ -2423,68 +2420,29 @@ async function abrirReemplazos(asignacionId) {
                     return false;
                 }
             }
-            const validacion = validarAsignacion(
-                candidato,
-                servicio,
-                asignacionOriginal.rol,
-                asignacionesServicio,
-                reglas
-            );
-            
-            if (!validacion.permitido) {
-            
-                console.log(
-                    `🚫 ${candidato.nombre} descartado:`,
-                    validacion.motivo
-                );
-            
-                return false;
-            }
-            
-            // --------------------------------------------------
-            // REGLA JOHAN + SANTIAGO
-            // --------------------------------------------------
-
-            const nombresOtros = otrasAsignaciones.map(
-                a => a.integrantes?.nombre
-            );
-
-            if (
-                persona.nombre === "Johan Díaz" &&
-                nombresOtros.includes("Santiago Mendoza")
-            ) {
-                return false;
-            }
-
-            if (
-                persona.nombre === "Santiago Mendoza" &&
-                nombresOtros.includes("Johan Díaz")
-            ) {
-                return false;
-            }
-    
             // =====================================================
             // VALIDAR REGLAS DINÁMICAS
             // =====================================================
             
             const validacion = validarAsignacion(
-                candidato,
+                persona,
                 servicio,
-                asignacionOriginal.rol,
-                asignacionesServicio,
+                rol,
+                otrasAsignaciones,
                 reglas
             );
             
             if (!validacion.permitido) {
             
                 console.log(
-                    `🚫 ${candidato.nombre} descartado:`,
+                    `🚫 ${persona.nombre} descartado:`,
                     validacion.motivo
                 );
             
                 return false;
-            }            
+            } 
             return true;
+             
         });
 
         // --------------------------------------------------
