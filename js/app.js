@@ -2462,7 +2462,28 @@ async function abrirReemplazos(asignacionId) {
             ) {
                 return false;
             }
-
+    
+            // =====================================================
+            // VALIDAR REGLAS DINÁMICAS
+            // =====================================================
+            
+            const validacion = validarAsignacion(
+                candidato,
+                servicio,
+                asignacionOriginal.rol,
+                asignacionesServicio,
+                reglas
+            );
+            
+            if (!validacion.permitido) {
+            
+                console.log(
+                    `🚫 ${candidato.nombre} descartado:`,
+                    validacion.motivo
+                );
+            
+                return false;
+            }            
             return true;
         });
 
