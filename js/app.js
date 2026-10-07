@@ -913,25 +913,10 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
                     return;
                 }
 
-                const validacionBajoGuitarra = validarAsignacion(
-                    guitarra,
-                    servicio,
-                    "Guitarra eléctrica",
-                    [
-                        {
-                            integrante_id: bajo.id,
-                            integrantes: bajo,
-                            rol: "Bajo"
-                        }
-                    ],
-                    reglas
-                );
-                
-                if (!validacionBajoGuitarra.permitido) {
-                
+                if (violaReglaNoCoincidencia(bajo, guitarra)) {
+
                     console.log(
-                        `🚫 Pareja descartada: ${bajo.nombre} + ${guitarra.nombre}`,
-                        validacionBajoGuitarra.motivo
+                        `🚫 Pareja descartada: ${bajo.nombre} + ${guitarra.nombre}`
                     );
                 
                     return;
