@@ -1471,7 +1471,45 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
             "Total de asignaciones simuladas:",
             todasLasAsignaciones.length
         );
-    
+        
+        console.log("=================================");
+        console.log("📊 DISTRIBUCIÓN DE PARTICIPACIONES");
+        console.log("=================================");
+        
+        console.table(
+            integrantes
+                .map(persona => ({
+                    nombre: persona.nombre,
+                    instrumento: persona.instrumento,
+                    participaciones: participaciones[persona.id] || 0
+                }))
+                .sort((a, b) =>
+                    b.participaciones - a.participaciones
+                )
+        );
+        
+        console.log("=================================");
+        console.log("📊 PARTICIPACIÓN POR ROL");
+        console.log("=================================");
+        
+        console.table(
+            integrantes
+                .map(persona => ({
+                    nombre: persona.nombre,
+                    batería: participacionesPorRol[persona.id]?.bateria || 0,
+                    bajo: participacionesPorRol[persona.id]?.bajo || 0,
+                    guitarra: participacionesPorRol[persona.id]?.guitarra || 0,
+                    piano: participacionesPorRol[persona.id]?.piano || 0,
+                    líder: participacionesPorRol[persona.id]?.lider || 0,
+                    coro: participacionesPorRol[persona.id]?.coro || 0
+                }))
+                .filter(persona =>
+                    Object.values(persona).some(
+                        valor => typeof valor === "number" && valor > 0
+                    )
+                )
+        );
+        
         console.log("");
         console.log(
             "Puedes revisar el resultado en la consola."
