@@ -1,646 +1,88 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Confirmación - Alabanza IPUC</title>
-
-    <link
-        rel="stylesheet"
-        href="css/styles.css"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación · Alabanza IPUC</title>
+    <link rel="stylesheet" href="css/confirmacion.css">
 </head>
-
 <body>
+    <main class="confirmacion-page">
+        <section class="confirmacion-card" id="confirmacionCard">
+            <div class="logo">🎶</div>
+            <p class="eyebrow">ALABANZA IPUC LÍBANO CENTRAL</p>
+            <h1>Confirmación de servicio</h1>
 
-    <header class="encabezado">
-
-        <div class="logo">
-
-            🎶
-            <strong>Alabanza IPUC</strong>
-
-            <span>
-                Líbano Central
-            </span>
-
-        </div>
-
-        <div class="estado-sistema">
-            Sistema activo
-        </div>
-
-    </header>
-
-
-    <main class="confirmacion-contenedor">
-
-        <div
-            id="cargando"
-            class="confirmacion-mensaje"
-        >
-
-            Cargando asignación...
-
-        </div>
-
-
-        <div
-            id="contenidoConfirmacion"
-            class="confirmacion-card"
-            style="display:none;"
-        >
-
-            <div class="confirmacion-icono">
-                🎶
+            <div id="estadoCarga" class="estado-carga">
+                <div class="spinner"></div>
+                <p>Cargando tu asignación...</p>
             </div>
 
-            <h1>
-                Confirmación de servicio
-            </h1>
-
-            <p
-                id="saludo"
-                class="confirmacion-saludo"
-            >
-            </p>
-
-
-            <div class="servicio-confirmacion">
-
-                <div
-                    id="fechaServicio"
-                    class="confirmacion-fecha"
-                >
+            <div id="contenidoConfirmacion" class="contenido-confirmacion oculto">
+                <div class="saludo">
+                    Hola, <strong id="nombreIntegrante"></strong> 👋
                 </div>
 
-                <div
-                    id="horaServicio"
-                    class="confirmacion-hora"
-                >
+                <div class="servicio-info">
+                    <div class="info-item">
+                        <span class="info-icono">📅</span>
+                        <div>
+                            <span class="info-label">Servicio</span>
+                            <strong id="fechaServicio"></strong>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-icono">🕐</span>
+                        <div>
+                            <span class="info-label">Hora</span>
+                            <strong id="horaServicio"></strong>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-icono">🎵</span>
+                        <div>
+                            <span class="info-label">Tu asignación</span>
+                            <strong id="rolServicio"></strong>
+                        </div>
+                    </div>
                 </div>
 
+                <p class="pregunta">
+                    ¿Puedes participar en este servicio?
+                </p>
+
+                <div class="acciones">
+                    <button id="btnConfirmar" class="btn btn-confirmar" type="button">
+                        <span>✅</span>
+                        <span>CONFIRMO</span>
+                    </button>
+
+                    <button id="btnNoPuedo" class="btn btn-no-puedo" type="button">
+                        <span>❌</span>
+                        <span>NO PUEDO</span>
+                    </button>
+                </div>
+
+                <div id="mensajeResultado" class="mensaje-resultado oculto"></div>
             </div>
 
-
-            <div class="asignacion-confirmacion">
-
-                <span>
-                    Tu asignación
-                </span>
-
-                <strong
-                    id="rolAsignado"
-                >
-                </strong>
-
+            <div id="estadoError" class="estado-error oculto">
+                <div class="error-icono">⚠️</div>
+                <h2>No fue posible cargar la asignación</h2>
+                <p id="mensajeError">El enlace puede ser incorrecto o haber expirado.</p>
             </div>
 
-
-            <div
-                id="estadoActual"
-                class="estado-confirmacion"
-            >
-            </div>
-
-
-            <div
-                id="botonesConfirmacion"
-                class="botones-confirmacion"
-            >
-
-                <button
-                    class="btn-confirmar"
-                    onclick="responderAsignacion('Confirmado')"
-                >
-                    ✅ CONFIRMO
-                </button>
-
-                <button
-                    class="btn-no-puedo"
-                    onclick="responderAsignacion('No puede')"
-                >
-                    ❌ NO PUEDO
-                </button>
-
-            </div>
-
-
-            <div
-                id="mensajeRespuesta"
-                class="mensaje-respuesta"
-            >
-            </div>
-
-        </div>
-
-
-        <div
-            id="errorConfirmacion"
-            class="confirmacion-card error-card"
-            style="display:none;"
-        >
-
-            <div class="confirmacion-icono">
-                ⚠️
-            </div>
-
-            <h1>
-                Enlace no válido
-            </h1>
-
-            <p>
-                No pudimos encontrar la asignación
-                asociada a este enlace.
-            </p>
-
-            <p>
-                Si crees que esto es un error,
-                comunícate con el director de alabanza.
-            </p>
-
-        </div>
-
+            <footer class="confirmacion-footer">
+                Dios les bendiga 🙏<br>
+                <span>IPUC Líbano Central</span>
+            </footer>
+        </section>
     </main>
 
-
-    <footer class="pie">
-
-        © 2026 Alabanza IPUC Líbano Central
-
-    </footer>
-
-
-    <script
-        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-    ></script>
-
-    <script>
-
-        // =============================================
-        // CONFIGURACIÓN SUPABASE
-        // =============================================
-
-        const SUPABASE_URL =
-            "https://eowvywzafmxjfeqsfzcg.supabase.co";
-
-        const SUPABASE_KEY =
-            "sb_publishable_npJQw6k00asz-E_eYJGs9g_t9HC74kS";
-
-
-        const supabaseClient =
-            window.supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_KEY
-            );
-
-
-        // =============================================
-        // VARIABLES
-        // =============================================
-
-        let asignacionActual = null;
-
-
-        // =============================================
-        // OBTENER TOKEN DE LA URL
-        // =============================================
-
-        function obtenerToken() {
-
-            const parametros =
-                new URLSearchParams(
-                    window.location.search
-                );
-
-            return parametros.get("token");
-        }
-
-
-        // =============================================
-        // CARGAR ASIGNACIÓN
-        // =============================================
-
-        async function cargarAsignacion() {
-
-            const token =
-                obtenerToken();
-
-            if (!token) {
-
-                mostrarError();
-
-                return;
-            }
-
-
-            console.log(
-                "Buscando asignación..."
-            );
-
-
-            const { data, error } =
-                await supabaseClient
-
-                    .from("asignaciones")
-
-                    .select(`
-                        id,
-                        rol,
-                        estado,
-                        servicio:servicios (
-                            id,
-                            fecha,
-                            hora,
-                            tipo
-                        ),
-                        integrante:integrantes (
-                            id,
-                            nombre
-                        )
-                    `)
-
-                    .eq(
-                        "token_confirmacion",
-                        token
-                    )
-
-                    .single();
-
-
-            if (error) {
-
-                console.error(
-                    "Error obteniendo asignación:",
-                    error
-                );
-
-                mostrarError();
-
-                return;
-            }
-
-
-            if (!data) {
-
-                mostrarError();
-
-                return;
-            }
-
-
-            asignacionActual = data;
-
-
-            mostrarAsignacion(data);
-        }
-
-
-        // =============================================
-        // MOSTRAR ASIGNACIÓN
-        // =============================================
-
-        function mostrarAsignacion(
-            asignacion
-        ) {
-
-            const integrante =
-                asignacion.integrante;
-
-            const servicio =
-                asignacion.servicio;
-
-
-            const fecha =
-                new Date(
-                    servicio.fecha +
-                    "T12:00:00"
-                );
-
-
-            const fechaTexto =
-                fecha.toLocaleDateString(
-                    "es-CO",
-                    {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long"
-                    }
-                );
-
-
-            const fechaCapitalizada =
-                fechaTexto
-                    .charAt(0)
-                    .toUpperCase() +
-                fechaTexto.slice(1);
-
-
-            const hora =
-                servicio.hora.substring(
-                    0,
-                    5
-                );
-
-
-            document.getElementById(
-                "saludo"
-            ).textContent =
-                `Hola ${integrante.nombre}. Hemos asignado tu participación en el próximo servicio.`;
-
-
-            document.getElementById(
-                "fechaServicio"
-            ).textContent =
-                fechaCapitalizada;
-
-
-            document.getElementById(
-                "horaServicio"
-            ).textContent =
-                `🕐 ${hora}`;
-
-
-            document.getElementById(
-                "rolAsignado"
-            ).textContent =
-                obtenerNombreRol(
-                    asignacion.rol
-                );
-
-
-            mostrarEstado(
-                asignacion.estado
-            );
-
-
-            document.getElementById(
-                "cargando"
-            ).style.display = "none";
-
-
-            document.getElementById(
-                "contenidoConfirmacion"
-            ).style.display = "block";
-        }
-
-
-        // =============================================
-        // NOMBRE DEL ROL
-        // =============================================
-
-        function obtenerNombreRol(
-            rol
-        ) {
-
-            const emojis = {
-
-                "Batería":
-                    "🥁 Batería",
-
-                "Bajo":
-                    "🎸 Bajo",
-
-                "Guitarra eléctrica":
-                    "🎸 Guitarra eléctrica",
-
-                "Piano principal":
-                    "🎹 Piano principal",
-
-                "Piano auxiliar":
-                    "🎹 Piano auxiliar",
-
-                "Voz líder":
-                    "🎤 Voz líder",
-
-                "Coro":
-                    "🎶 Coro"
-
-            };
-
-
-            return emojis[rol] || rol;
-        }
-
-
-        // =============================================
-        // MOSTRAR ESTADO ACTUAL
-        // =============================================
-
-        function mostrarEstado(
-            estado
-        ) {
-
-            const elemento =
-                document.getElementById(
-                    "estadoActual"
-                );
-
-
-            if (estado === "Confirmado") {
-
-                elemento.innerHTML =
-                    "🟢 Ya confirmaste tu participación.";
-
-                elemento.className =
-                    "estado-confirmacion confirmado";
-
-                return;
-            }
-
-
-            if (estado === "No puede") {
-
-                elemento.innerHTML =
-                    "🔴 Indicastes que no puedes asistir.";
-
-                elemento.className =
-                    "estado-confirmacion no-puede";
-
-                return;
-            }
-
-
-            elemento.innerHTML =
-                "🟡 Aún no has respondido.";
-
-            elemento.className =
-                "estado-confirmacion pendiente";
-        }
-
-
-        // =============================================
-        // RESPONDER
-        // =============================================
-
-        async function responderAsignacion(
-            respuesta
-        ) {
-
-            if (!asignacionActual) {
-
-                return;
-            }
-
-
-            const botones =
-                document.getElementById(
-                    "botonesConfirmacion"
-                );
-
-
-            botones.style.display = "none";
-
-
-            const mensaje =
-                document.getElementById(
-                    "mensajeRespuesta"
-                );
-
-
-            mensaje.textContent =
-                "Guardando respuesta...";
-
-
-            // -----------------------------------------
-            // 1. Actualizar asignación
-            // -----------------------------------------
-
-            const { error: errorAsignacion } =
-                await supabaseClient
-
-                    .from("asignaciones")
-
-                    .update({
-                        estado: respuesta
-                    })
-
-                    .eq(
-                        "id",
-                        asignacionActual.id
-                    );
-
-
-            if (errorAsignacion) {
-
-                console.error(
-                    "Error actualizando asignación:",
-                    errorAsignacion
-                );
-
-
-                botones.style.display =
-                    "flex";
-
-                mensaje.textContent =
-                    "❌ No pudimos guardar tu respuesta. Intenta nuevamente.";
-
-                return;
-            }
-
-
-            // -----------------------------------------
-            // 2. Registrar confirmación
-            // -----------------------------------------
-
-            const { error: errorConfirmacion } =
-                await supabaseClient
-
-                    .from("confirmaciones")
-
-                    .upsert(
-                        {
-                            asignacion_id:
-                                asignacionActual.id,
-
-                            estado:
-                                respuesta,
-
-                            fecha_respuesta:
-                                new Date().toISOString()
-                        },
-                        {
-                            onConflict:
-                                "asignacion_id"
-                        }
-                    );
-
-
-            if (errorConfirmacion) {
-
-                console.error(
-                    "Error guardando confirmación:",
-                    errorConfirmacion
-                );
-
-                mensaje.textContent =
-                    "⚠️ La asignación fue actualizada, pero hubo un problema registrando la confirmación.";
-
-                return;
-            }
-
-
-            // -----------------------------------------
-            // 3. Mostrar resultado
-            // -----------------------------------------
-
-            asignacionActual.estado =
-                respuesta;
-
-
-            mostrarEstado(
-                respuesta
-            );
-
-
-            if (respuesta === "Confirmado") {
-
-                mensaje.innerHTML =
-                    "✅ <strong>¡Gracias!</strong> Tu participación ha sido confirmada.";
-
-            } else {
-
-                mensaje.innerHTML =
-                    "🔴 Hemos registrado que no puedes asistir. El director podrá gestionar un reemplazo.";
-
-            }
-
-        }
-
-
-        // =============================================
-        // MOSTRAR ERROR
-        // =============================================
-
-        function mostrarError() {
-
-            document.getElementById(
-                "cargando"
-            ).style.display = "none";
-
-
-            document.getElementById(
-                "errorConfirmacion"
-            ).style.display = "block";
-        }
-
-
-        // =============================================
-        // INICIAR
-        // =============================================
-
-        cargarAsignacion();
-
-    </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/confirmacion.js"></script>
 </body>
-
 </html>

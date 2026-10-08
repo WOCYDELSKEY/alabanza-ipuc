@@ -1,0 +1,242 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(255,255,255,.18), transparent 35%),
+        linear-gradient(135deg, #111827 0%, #1f2937 45%, #374151 100%);
+    color: #172033;
+}
+
+.confirmacion-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.confirmacion-card {
+    width: min(100%, 520px);
+    background: rgba(255, 255, 255, .98);
+    border-radius: 24px;
+    padding: 34px 30px 24px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+    text-align: center;
+}
+
+.logo {
+    width: 66px;
+    height: 66px;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    background: #f3f4f6;
+    font-size: 31px;
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+h1 {
+    margin: 0 0 24px;
+    font-size: 28px;
+    line-height: 1.15;
+}
+
+.estado-carga {
+    padding: 28px 10px;
+    color: #6b7280;
+}
+
+.spinner {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 12px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #374151;
+    border-radius: 50%;
+    animation: girar .8s linear infinite;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+.oculto {
+    display: none !important;
+}
+
+.saludo {
+    margin-bottom: 20px;
+    font-size: 17px;
+}
+
+.servicio-info {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #f9fafb;
+}
+
+.info-icono {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #ffffff;
+    font-size: 20px;
+}
+
+.info-label {
+    display: block;
+    margin-bottom: 3px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.info-item strong {
+    font-size: 15px;
+}
+
+.pregunta {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.acciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn {
+    min-height: 56px;
+    border: 0;
+    border-radius: 13px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .18s ease, filter .18s ease, opacity .18s ease;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(.96);
+}
+
+.btn:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.btn-confirmar {
+    background: #16a34a;
+}
+
+.btn-no-puedo {
+    background: #dc2626;
+}
+
+.mensaje-resultado {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 13px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.mensaje-resultado.exito {
+    background: #ecfdf5;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.mensaje-resultado.rechazo {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.estado-error {
+    padding: 12px 0 8px;
+}
+
+.error-icono {
+    font-size: 42px;
+    margin-bottom: 8px;
+}
+
+.estado-error h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+}
+
+.estado-error p {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.confirmacion-footer {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.confirmacion-footer span {
+    font-weight: 700;
+}
+
+@media (max-width: 520px) {
+    .confirmacion-page {
+        padding: 12px;
+    }
+
+    .confirmacion-card {
+        padding: 28px 18px 20px;
+        border-radius: 20px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .acciones {
+        grid-template-columns: 1fr;
+    }
+}
