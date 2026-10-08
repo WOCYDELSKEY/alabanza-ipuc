@@ -1,0 +1,1 @@
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.admin-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px}.admin-card h2{margin-bottom:6px}.admin-card p{color:#64748b}

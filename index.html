@@ -1,82 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Alabanza IPUC Líbano Central</title>
-
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-
-<body>
-
-    <header class="header">
-        <div class="header-content">
-            <div>
-                <h1>🎶 Alabanza IPUC</h1>
-                <p>Líbano Central</p>
-            </div>
-
-            <span class="status">Sistema activo</span>
-        </div>
-    </header>
-
-
-   <main class="contenedor">
-
-    <section class="encabezado-pagina">
-        <div>
-            <h1>📅 Cronograma de Alabanza</h1>
-            <p>IPUC Líbano Central · Octubre 2026</p>
-        </div>
-
-        <button class="btn-recargar" onclick="cargarCronograma()">
-            🔄 Actualizar
-        </button>
-    </section>
-
-    <div id="estadoCronograma" class="estado">
-        Cargando cronograma...
-    </div>
-
-    <section id="cronograma" class="cronograma">
-        <!-- Aquí se cargará el cronograma desde Supabase -->
-    </section>
-
-    <!-- =========================================
-     VENTANA DETALLE DEL SERVICIO
-========================================= -->
-
-    <div id="modalServicio" class="modal-servicio">
-
-        <div class="modal-contenido">
-
-            <button
-                class="modal-cerrar"
-                onclick="cerrarDetalleServicio()">
-                ×
-            </button>
-
-            <div id="detalleServicio">
-                <!-- El contenido se cargará desde JavaScript -->
-            </div>
-
-        </div>
-
-    </div>
-
-</main>
-
-
-    <footer>
-        <p>
-            © 2026 Alabanza IPUC Líbano Central
-        </p>
-    </footer>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/app.js"></script>
-
-</body>
-</html>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Alabanza IPUC Líbano Central</title>
+<link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/layout.css">
+</head><body>
+<div class="app-layout">
+<aside id="sidebar" class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div><nav class="sidebar-nav">
+<div class="menu-label">Principal</div><a class="menu-link activo" href="index.html">🏠 <span>Inicio</span></a><a class="menu-link" href="#cronograma">📅 <span>Cronograma</span></a>
+<div class="menu-label">Equipo</div><a class="menu-link" href="admin/integrantes.html">👥 <span>Integrantes</span></a><a class="menu-link" href="admin/disponibilidad.html">📆 <span>Disponibilidad</span></a>
+<div class="menu-label">Gestión</div><a class="menu-link" href="admin/confirmaciones.html">✅ <span>Confirmaciones</span></a><a class="menu-link" href="admin/reemplazos.html">🔄 <span>Reemplazos</span></a>
+<div class="menu-label">Configuración</div><a class="menu-link" href="admin/reglas.html">⚙️ <span>Reglas</span></a><a class="menu-link" href="admin/servicios.html">🗓️ <span>Servicios</span></a>
+<div class="menu-label">Información</div><a class="menu-link" href="admin/estadisticas.html">📊 <span>Estadísticas</span></a>
+</nav></aside>
+<div id="menuOverlay" class="menu-overlay" onclick="cerrarMenu()"></div>
+<div class="app-main"><header class="app-topbar"><button class="menu-toggle" onclick="toggleMenu()">☰</button><strong>📅 Cronograma de Alabanza</strong><span class="status">Sistema activo</span></header>
+<main class="app-content"><section class="encabezado-pagina"><div><h1>📅 Cronograma de Alabanza</h1><p>IPUC Líbano Central · Octubre 2026</p></div><button class="btn-recargar" onclick="cargarCronograma()">🔄 Actualizar</button></section>
+<div id="estadoCronograma" class="estado">Cargando cronograma...</div><section id="cronograma" class="cronograma"></section></main>
+<footer><p>© 2026 Alabanza IPUC Líbano Central</p></footer></div></div>
+<div id="modalServicio" class="modal-servicio"><div class="modal-contenido"><button class="modal-cerrar" onclick="cerrarDetalleServicio()">×</button><div id="detalleServicio"></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script><script src="js/app.js"></script>
+</body></html>
