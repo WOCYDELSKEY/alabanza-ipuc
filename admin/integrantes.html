@@ -1,1 +1,89 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>👥 Integrantes · Alabanza IPUC</title><link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/layout.css"><link rel="stylesheet" href="../css/admin.css"></head><body><div class="app-layout"><aside class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div><nav class="sidebar-nav"><div class="menu-label">Navegación</div><a class="menu-link" href="../index.html">🏠 Inicio</a><a class="menu-link" href="integrantes.html">👥 Integrantes</a><a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a><a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a><a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a><a class="menu-link" href="reglas.html">⚙️ Reglas</a><a class="menu-link" href="servicios.html">🗓️ Servicios</a><a class="menu-link" href="estadisticas.html">📊 Estadísticas</a></nav></aside><div class="app-main"><header class="app-topbar"><strong>👥 Integrantes</strong><span class="status">Sistema activo</span></header><main class="app-content"><section class="encabezado-pagina"><div><h1>👥 Integrantes</h1><p>Módulo en construcción</p></div></section><div class="admin-card"><h2>Próximo paso</h2><p>Este módulo se conectará a Supabase sin alterar el cronograma que ya funciona.</p></div></main></div></div></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Integrantes · Alabanza IPUC</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/integrantes.css">
+</head>
+<body>
+<div class="app-layout">
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div>
+    <nav class="sidebar-nav">
+      <div class="menu-label">Navegación</div>
+      <a class="menu-link" href="../index.html">🏠 Inicio / Cronograma</a>
+      <a class="menu-link activo" href="integrantes.html">👥 Integrantes</a>
+      <a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a>
+      <a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a>
+      <a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a>
+      <a class="menu-link" href="reglas.html">⚙️ Reglas</a>
+      <a class="menu-link" href="servicios.html">🗓️ Servicios</a>
+      <a class="menu-link" href="estadisticas.html">📊 Estadísticas</a>
+    </nav>
+  </aside>
+  <div id="menuOverlay" class="menu-overlay" onclick="cerrarMenu()"></div>
+  <div class="app-main">
+    <header class="app-topbar"><button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><strong>👥 Gestión de integrantes</strong><span class="status">Sistema activo</span></header>
+    <main class="app-content integrantes-page">
+      <section class="encabezado-pagina">
+        <div><h1>👥 Integrantes</h1><p>Administra los datos de las personas del equipo de alabanza.</p></div>
+        <button class="btn-principal" id="btnNuevo">＋ Nuevo integrante</button>
+      </section>
+      <div id="mensajeEstado" class="mensaje-estado" role="status">Cargando integrantes…</div>
+      <section class="resumen-integrantes" aria-label="Resumen de integrantes">
+        <article class="resumen-card"><span>👥</span><div><small>Total registrados</small><strong id="totalIntegrantes">—</strong></div></article>
+        <article class="resumen-card"><span>✅</span><div><small>Activos</small><strong id="totalActivos">—</strong></div></article>
+        <article class="resumen-card"><span>⏸️</span><div><small>Inactivos</small><strong id="totalInactivos">—</strong></div></article>
+      </section>
+      <section class="panel-integrantes">
+        <div class="barra-filtros">
+          <label class="buscador">🔎 <input id="buscarIntegrante" type="search" placeholder="Buscar por nombre, teléfono o instrumento…" autocomplete="off"></label>
+          <select id="filtroEstado" aria-label="Filtrar por estado"><option value="todos">Todos los estados</option><option value="activos">Solo activos</option><option value="inactivos">Solo inactivos</option></select>
+        </div>
+        <div class="tabla-contenedor">
+          <table class="tabla-integrantes">
+            <thead><tr><th>Integrante</th><th>Instrumento / función</th><th>Nivel</th><th>Voz líder</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="listaIntegrantes"><tr><td colspan="6" class="tabla-vacia">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="nota-integrantes">Los integrantes inactivos se conservan en la base de datos, pero no deben considerarse para nuevas asignaciones.</p>
+      </section>
+    </main>
+  </div>
+</div>
+<div id="modalIntegrante" class="modal-integrante" aria-hidden="true">
+  <section class="modal-integrante-contenido" role="dialog" aria-modal="true" aria-labelledby="tituloModalIntegrante">
+    <button class="cerrar-modal-integrante" id="cerrarModal" aria-label="Cerrar">×</button>
+    <h2 id="tituloModalIntegrante">Nuevo integrante</h2>
+    <p class="subtitulo-modal">Completa los datos básicos del integrante.</p>
+    <form id="formIntegrante">
+      <input type="hidden" id="integranteId">
+      <label>Nombre completo <span>*</span><input id="nombre" maxlength="120" required placeholder="Nombre y apellidos"></label>
+      <label>Teléfono / WhatsApp<input id="telefono" maxlength="30" type="tel" placeholder="Ej. 3001234567"></label>
+      <div class="form-fila">
+        <label>Instrumento o función
+          <select id="instrumento" required>
+            <option value="">Selecciona…</option><option value="Batería">Batería</option><option value="Bajo">Bajo</option><option value="Guitarra eléctrica">Guitarra eléctrica</option><option value="Piano">Piano</option><option value="Coro">Coro</option><option value="Voz líder">Voz líder</option><option value="Auxiliar">Auxiliar</option><option value="Otro">Otro</option>
+          </select>
+        </label>
+        <label>Nivel
+          <select id="nivel"><option value="">Sin especificar</option><option value="Principal">Principal</option><option value="Aprendiz">Aprendiz</option><option value="Intermedio">Intermedio</option><option value="Avanzado">Avanzado</option>
+          </select>
+        </label>
+      </div>
+      <label class="opcion-check"><input id="puedeSerLider" type="checkbox"> Puede servir como voz líder</label>
+      <label class="opcion-check"><input id="activo" type="checkbox" checked> Integrante activo</label>
+      <div class="acciones-modal"><button type="button" class="btn-secundario" id="cancelarModal">Cancelar</button><button type="submit" class="btn-principal" id="guardarIntegrante">Guardar integrante</button></div>
+      <p class="aviso-formulario">Cambiar el instrumento, nivel o estado puede afectar futuras asignaciones. No se modifican los servicios ni las asignaciones existentes.</p>
+    </form>
+  </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/integrantes.js"></script>
+</body>
+</html>
