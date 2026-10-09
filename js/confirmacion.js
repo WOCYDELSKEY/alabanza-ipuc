@@ -103,19 +103,17 @@ async function cargarAsignacion() {
         if (data.estado === "Confirmado") {
             mostrarResultado(
                 "exito",
-                "✅ Tu participación ya está confirmada. ¡Gracias por servir! 🙏"
+                "✅ Tu respuesta actual es CONFIRMO. Si tu disponibilidad cambió, puedes seleccionar NO PUEDO para actualizarla."
             );
-            bloquearBotones();
         } else if (data.estado === "No puede") {
             mostrarResultado(
                 "rechazo",
-                "❌ Ya registraste que no puedes participar en este servicio."
+                "❌ Tu respuesta actual es NO PUEDO. Si ahora sí puedes participar, selecciona CONFIRMO para actualizarla."
             );
-            bloquearBotones();
         } else if (data.estado === "Reemplazado") {
             mostrarResultado(
                 "rechazo",
-                "🔄 Esta asignación ya fue reemplazada."
+                "🔄 Esta asignación ya fue reemplazada y no se puede modificar desde este enlace."
             );
             bloquearBotones();
         }
@@ -175,14 +173,18 @@ async function registrarRespuesta(estado) {
         if (estado === "Confirmado") {
             mostrarResultado(
                 "exito",
-                "✅ ¡Participación confirmada! Te esperamos en el servicio. Dios te bendiga. 🙏"
+                "✅ ¡Respuesta actualizada! Tu participación está confirmada. Si tu disponibilidad cambia, puedes volver a modificarla desde este mismo enlace. 🙏"
             );
         } else {
             mostrarResultado(
                 "rechazo",
-                "❌ Hemos registrado que no puedes participar. Gracias por avisarnos con tiempo."
+                "❌ ¡Respuesta actualizada! Registramos que no puedes participar. Si tu disponibilidad vuelve a cambiar, puedes modificarla desde este mismo enlace."
             );
         }
+
+        // Permitir cambiar la decisión nuevamente, incluso sin recargar la página.
+        btnConfirmar.disabled = false;
+        btnNoPuedo.disabled = false;
     } catch (error) {
         console.error("Error registrando respuesta:", error);
         btnConfirmar.disabled = false;
