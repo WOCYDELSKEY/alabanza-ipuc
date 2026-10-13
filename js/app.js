@@ -211,7 +211,18 @@ function validarAsignacion(
 // GENERADOR DE CRONOGRAMA
 // =========================================================
 
-async function generarCronograma(modoSimulacion = false) {
+async function generarCronograma(modoSimulacion = false, mesObjetivo = "2026-11") {
+
+    // mesObjetivo usa el formato YYYY-MM. Por defecto prepara noviembre de 2026.
+    if (!/^\d{4}-\d{2}$/.test(mesObjetivo)) {
+        console.error("❌ El mes debe tener formato YYYY-MM, por ejemplo 2026-11.");
+        return;
+    }
+    const [anioObjetivo, numeroMesObjetivo] = mesObjetivo.split("-").map(Number);
+    const fechaInicioObjetivo = `${mesObjetivo}-01`;
+    const ultimoDiaObjetivo = new Date(anioObjetivo, numeroMesObjetivo, 0).getDate();
+    const fechaFinObjetivo = `${mesObjetivo}-${String(ultimoDiaObjetivo).padStart(2, "0")}`;
+
 
     console.clear();
 
@@ -261,13 +272,25 @@ async function generarCronograma(modoSimulacion = false) {
         return;
     }
 
+    const { data: excepcionesDisponibilidad, error: errorExcepciones } =
+        await supabaseClient
+            .from("excepciones_disponibilidad")
+            .select("*")
+            .lte("fecha_inicio", fechaFinObjetivo)
+            .gte("fecha_fin", fechaInicioObjetivo);
+
+    if (errorExcepciones) {
+        console.error("Error obteniendo excepciones de disponibilidad. Ejecuta el SQL del módulo:", errorExcepciones);
+        return;
+    }
+
     const { data: servicios, error: errorServicios } =
         await supabaseClient
             .from("servicios")
             .select("*")
             .eq("activo", true)
-            .gte("fecha", "2026-10-01")
-            .lte("fecha", "2026-10-31")
+            .gte("fecha", fechaInicioObjetivo)
+            .lte("fecha", fechaFinObjetivo)
             .order("fecha");
 
     if (errorServicios) {
@@ -280,19 +303,15 @@ async function generarCronograma(modoSimulacion = false) {
 
     console.log("Integrantes:", integrantes.length);
     console.log("Roles:", rolesIntegrantes.length);
-    console.log("Servicios:", servicios.length);
+    console.log(`Servicios de ${mesObjetivo}:`, servicios.length);
 
-    if (integrantes.length !== 24) {
-        console.error(
-            "❌ Deben existir exactamente 24 integrantes."
-        );
+    if (!integrantes.length) {
+        console.error("❌ No hay integrantes activos para generar el cronograma.");
         return;
     }
 
-    if (servicios.length !== 14) {
-        console.error(
-            "❌ Deben existir exactamente 14 servicios."
-        );
+    if (!servicios.length) {
+        console.error(`❌ No hay servicios activos para ${mesObjetivo}. Crea primero los servicios de ese mes.`);
         return;
     }
 
@@ -412,10 +431,19 @@ async function generarCronograma(modoSimulacion = false) {
 
     function estaDisponible(persona, servicio) {
 
+        // Las excepciones de fecha/rango prevalecen sobre la disponibilidad habitual.
+        const excepcionesPersona = (excepcionesDisponibilidad || []).filter(e =>
+            String(e.integrante_id) === String(persona.id) &&
+            e.fecha_inicio <= servicio.fecha &&
+            e.fecha_fin >= servicio.fecha
+        );
+
+        // Si hay excepciones solapadas, "no disponible" prevalece por seguridad.
+        if (excepcionesPersona.some(e => e.disponible === false)) return false;
+        if (excepcionesPersona.some(e => e.disponible === true)) return true;
+
         const dia = diaSemana(servicio.fecha);
-
         return disponibilidad[persona.id]?.[dia] === true;
-
     }
 
     function estaAsignado(persona, asignados) {
@@ -1626,7 +1654,23 @@ document.addEventListener(
 // CARGAR CRONOGRAMA EN PANTALLA
 // =====================================================
 
-async function cargarCronograma() {
+async function cargarCronograma(mesObjetivo = null) {
+
+    const selectorMes = document.getElementById("mesCronograma");
+    const mes = mesObjetivo || selectorMes?.value || "2026-11";
+    if (!/^\d{4}-\d{2}$/.test(mes)) {
+        alert("Selecciona un mes válido.");
+        return;
+    }
+    const [anio, numeroMes] = mes.split("-").map(Number);
+    const fechaDesde = `${mes}-01`;
+    const fechaHasta = `${mes}-${String(new Date(anio, numeroMes, 0).getDate()).padStart(2, "0")}`;
+    const subtitulo = document.getElementById("subtituloCronograma");
+    if (subtitulo) {
+        const fechaEtiqueta = new Date(anio, numeroMes - 1, 1);
+        subtitulo.textContent = "IPUC Líbano Central · " +
+            fechaEtiqueta.toLocaleDateString("es-CO", {month:"long", year:"numeric"});
+    }
 
     const contenedor = document.getElementById("cronograma");
     const estado = document.getElementById("estadoCronograma");
@@ -1639,15 +1683,15 @@ async function cargarCronograma() {
     estado.textContent = "Cargando cronograma...";
 
     // -------------------------------------------------
-    // 1. Obtener servicios de octubre 2026
+    // 1. Obtener servicios del mes seleccionado
     // -------------------------------------------------
 
     const { data: servicios, error: errorServicios } =
         await supabaseClient
             .from("servicios")
             .select("*")
-            .gte("fecha", "2026-10-01")
-            .lte("fecha", "2026-10-31")
+            .gte("fecha", fechaDesde)
+            .lte("fecha", fechaHasta)
             .order("fecha", { ascending: true })
             .order("hora", { ascending: true });
 
@@ -1847,6 +1891,8 @@ async function cargarCronograma() {
 document.addEventListener(
     "DOMContentLoaded",
     () => {
+        const selectorMes = document.getElementById("mesCronograma");
+        if (selectorMes) selectorMes.addEventListener("change", () => cargarCronograma());
         cargarCronograma();
     }
 );
@@ -2329,9 +2375,25 @@ async function abrirReemplazos(asignacionId) {
             throw errorDisponibilidad;
         }
 
+        const { data: excepciones, error: errorExcepciones } = await supabaseClient
+            .from("excepciones_disponibilidad")
+            .select("integrante_id, fecha_inicio, fecha_fin, disponible")
+            .lte("fecha_inicio", servicio.fecha)
+            .gte("fecha_fin", servicio.fecha);
+
+        if (errorExcepciones) throw errorExcepciones;
+
         const disponibles = new Set(
             (disponibilidades || []).map(d => d.integrante_id)
         );
+
+        // Una excepción positiva habilita la fecha; una negativa la bloquea.
+        for (const e of (excepciones || [])) {
+            if (e.disponible === true) disponibles.add(e.integrante_id);
+        }
+        for (const e of (excepciones || [])) {
+            if (e.disponible === false) disponibles.delete(e.integrante_id);
+        }
 
         // --------------------------------------------------
         // 3. Obtener todas las asignaciones del servicio
@@ -3303,4 +3365,104 @@ async function enviarWhatsAppReemplazo(asignacionId) {
             "❌ No fue posible preparar el mensaje de WhatsApp."
         );
     }
+}
+
+
+// =====================================================
+// PREPARAR CRONOGRAMA COMPLETO PARA WHATSAPP (ENVÍO MANUAL)
+// =====================================================
+
+function prepararMensajeCronogramaWhatsApp() {
+    const selectorMes = document.getElementById("mesCronograma");
+    const mes = selectorMes?.value || "2026-11";
+    const servicios = window.serviciosCronograma || [];
+    const asignaciones = window.asignacionesCronograma || [];
+    const estado = document.getElementById("estadoCopiarMensaje");
+
+    if (!servicios.length) {
+        alert("No hay servicios cargados para preparar el mensaje. Consulta primero el mes que deseas compartir.");
+        return;
+    }
+
+    const [anio, numeroMes] = mes.split("-").map(Number);
+    const fechaEtiqueta = new Date(anio, numeroMes - 1, 1).toLocaleDateString("es-CO", { month: "long", year: "numeric" });
+    const tituloMes = fechaEtiqueta.charAt(0).toLocaleUpperCase("es-CO") + fechaEtiqueta.slice(1);
+    const ordenRoles = ["Batería", "Bajo", "Guitarra eléctrica", "Piano principal", "Piano auxiliar", "Voz líder", "Coro"];
+    const emojis = { "Batería": "🥁", "Bajo": "🎸", "Guitarra eléctrica": "🎸", "Piano principal": "🎹", "Piano auxiliar": "🎹", "Voz líder": "🎤", "Coro": "🎶" };
+    const lineas = ["🎶 *CRONOGRAMA DE ALABANZA*", "⛪ *IPUC Líbano Central*", `📅 *${tituloMes}*`, "", "Dios les bendiga. Compartimos la programación de los servicios:", ""];
+
+    const serviciosOrdenados = [...servicios].sort((a, b) => {
+        const fechaA = `${a.fecha || ""}T${a.hora || "00:00"}`;
+        const fechaB = `${b.fecha || ""}T${b.hora || "00:00"}`;
+        return fechaA.localeCompare(fechaB);
+    });
+
+    serviciosOrdenados.forEach((servicio, indice) => {
+        const fecha = new Date(`${servicio.fecha}T12:00:00`);
+        const fechaTexto = fecha.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" });
+        const fechaCapitalizada = fechaTexto.charAt(0).toLocaleUpperCase("es-CO") + fechaTexto.slice(1);
+        const hora = String(servicio.hora || "").substring(0, 5);
+        lineas.push(`📌 *${fechaCapitalizada}${hora ? ` · ${hora}` : ""}*`);
+        const asignacionesServicio = asignaciones.filter(a => String(a.servicio_id) === String(servicio.id));
+        let cantidadAsignaciones = 0;
+
+        ordenRoles.forEach(rol => {
+            const delRol = asignacionesServicio.filter(a => a.rol === rol && a.integrantes);
+            if (!delRol.length) return;
+            const nombres = delRol.map(a => a.integrantes.nombre).filter(Boolean);
+            if (!nombres.length) return;
+            lineas.push(`${emojis[rol] || "•"} ${rol}: ${nombres.join(", ")}`);
+            cantidadAsignaciones += nombres.length;
+        });
+
+        if (cantidadAsignaciones === 0) {
+            lineas.push("⚠️ *Pendiente de asignar equipo*");
+        }
+        if (indice < serviciosOrdenados.length - 1) lineas.push("");
+    });
+
+    lineas.push("", "🙏 Agradecemos confirmar su participación en la aplicación y avisar con anticipación cualquier novedad.", "¡Dios les bendiga!");
+    const textarea = document.getElementById("textoWhatsAppCronograma");
+    if (!textarea) return;
+    textarea.value = lineas.join("\n");
+    if (estado) estado.textContent = "";
+    document.getElementById("modalWhatsAppCronograma")?.classList.add("abierto");
+    textarea.focus();
+    textarea.setSelectionRange(0, 0);
+}
+
+function cerrarMensajeCronogramaWhatsApp() {
+    document.getElementById("modalWhatsAppCronograma")?.classList.remove("abierto");
+}
+
+async function copiarMensajeCronogramaWhatsApp() {
+    const textarea = document.getElementById("textoWhatsAppCronograma");
+    const estado = document.getElementById("estadoCopiarMensaje");
+    if (!textarea) return;
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(textarea.value);
+        } else {
+            textarea.focus();
+            textarea.select();
+            const copiado = document.execCommand("copy");
+            if (!copiado) throw new Error("El navegador no permitió copiar automáticamente.");
+        }
+        if (estado) estado.textContent = "✅ Mensaje copiado. Ahora puedes pegarlo en el grupo de WhatsApp.";
+    } catch (error) {
+        console.error("No se pudo copiar el mensaje:", error);
+        textarea.focus();
+        textarea.select();
+        if (estado) estado.textContent = "Seleccionamos el texto. Si no se copió, usa Ctrl+C para copiarlo.";
+    }
+}
+
+function abrirWhatsAppCronograma() {
+    const textarea = document.getElementById("textoWhatsAppCronograma");
+    if (!textarea?.value.trim()) {
+        alert("Primero genera el mensaje del cronograma.");
+        return;
+    }
+    const url = `https://wa.me/?text=${encodeURIComponent(textarea.value)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
 }
