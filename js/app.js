@@ -1604,6 +1604,36 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
         "================================="
     );
 }
+// Generación desde la interfaz: evita usar manualmente la consola del navegador.
+async function generarCronogramaDesdePantalla() {
+  const selector = document.getElementById('mesCronograma');
+  const mes = selector?.value || '2026-11';
+  const estado = document.getElementById('estadoGeneradorCronograma');
+  const boton = document.getElementById('btnGenerarCronograma');
+  if (!/^\d{4}-\d{2}$/.test(mes)) { if (estado) estado.textContent = 'Selecciona un mes válido.'; return; }
+  const [anio, numeroMes] = mes.split('-').map(Number);
+  const desde = `${mes}-01`;
+  const hasta = `${mes}-${String(new Date(anio, numeroMes, 0).getDate()).padStart(2,'0')}`;
+  const {data: servicios, error: errServicios} = await supabaseClient.from('servicios').select('id').eq('activo', true).gte('fecha',desde).lte('fecha',hasta);
+  if (errServicios) { console.error(errServicios); if(estado)estado.textContent='❌ No se pudieron consultar los servicios.'; return; }
+  if (!servicios?.length) { if(estado)estado.textContent='⚠️ No hay servicios activos para este mes. Ve a Gestión → Servicios y créalos primero.'; return; }
+  const ids = servicios.map(s=>s.id);
+  const {data: previas,error: errPrevias}=await supabaseClient.from('asignaciones').select('id,servicio_id').in('servicio_id',ids);
+  if(errPrevias){console.error(errPrevias);if(estado)estado.textContent='❌ No se pudo comprobar si ya existen asignaciones.';return;}
+  if(previas?.length){if(estado)estado.textContent='⚠️ Este mes ya tiene asignaciones. Para evitar duplicados, no se generó otro cronograma.';alert('Este mes ya tiene asignaciones. No se generará otro cronograma para evitar duplicados.');return;}
+  if(!confirm(`Se generarán asignaciones para ${servicios.length} servicios de ${mes}. Esta acción guardará datos en Supabase y no se puede deshacer automáticamente. ¿Continuar?`))return;
+  if(boton){boton.disabled=true;boton.textContent='⏳ Generando…';}
+  if(estado)estado.textContent='Generando asignaciones y validando reglas…';
+  try {
+    await generarCronograma(false, mes);
+    const {data: despues,error: errDespues}=await supabaseClient.from('asignaciones').select('id,servicio_id').in('servicio_id',ids);
+    if(errDespues)throw errDespues;
+    if(despues?.length){if(estado)estado.textContent=`✅ Se guardaron ${despues.length} asignaciones en ${servicios.length} servicios. Actualizando cronograma…`;await cargarCronograma(mes);}
+    else if(estado)estado.textContent='⚠️ El generador terminó sin guardar asignaciones. Revisa la consola del navegador para ver el detalle.';
+  } catch(e) { console.error(e);if(estado)estado.textContent=`❌ Ocurrió un error al generar el cronograma: ${e.message||e}`; }
+  finally { if(boton){boton.disabled=false;boton.textContent='✨ Generar asignaciones';} }
+}
+
 // =========================================================
 // NAVEGACIÓN TEMPORAL
 // =========================================================
