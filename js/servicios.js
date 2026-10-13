@@ -33,12 +33,14 @@ async function crearServiciosMes() {
   const dias=[];if($serv('diaDomingo').checked)dias.push(0);if($serv('diaJueves').checked)dias.push(4);if($serv('diaSabado').checked)dias.push(6);
   if(!dias.length){mensajeServicios('Selecciona al menos un día de servicio.',true);return;}
   const horas={'0':$serv('horaDomingo').value,'4':$serv('horaTarde').value,'6':$serv('horaTarde').value};
+  const tipos={'0':$serv('tipoDomingo').value.trim(),'4':$serv('tipoJueves').value.trim(),'6':$serv('tipoSabado').value.trim()};
   if(dias.some(d=>!horas[d])){mensajeServicios('Completa los horarios seleccionados.',true);return;}
+  if(dias.some(d=>!tipos[d])){mensajeServicios('Completa el tipo de servicio para cada día seleccionado.',true);return;}
   const boton=$serv('crearMesServicios');boton.disabled=true;boton.textContent='Creando…';
   try {
     const fechas=fechasDelMes(mes,dias);const {data:existentes,error:err}=await supabaseClient.from('servicios').select('fecha,hora').gte('fecha',`${mes}-01`).lte('fecha',`${mes}-${String(new Date(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0).getDate()).padStart(2,'0')}`);
     if(err)throw err;
-    const llaves=new Set((existentes||[]).map(s=>`${s.fecha}|${String(s.hora).slice(0,5)}`));const nuevos=fechas.map(x=>({fecha:x.fecha,hora:horas[x.dia],activo:true})).filter(s=>!llaves.has(`${s.fecha}|${s.hora}`));
+    const llaves=new Set((existentes||[]).map(s=>`${s.fecha}|${String(s.hora).slice(0,5)}`));const nuevos=fechas.map(x=>({fecha:x.fecha,hora:horas[x.dia],tipo:tipos[x.dia],activo:true})).filter(s=>!llaves.has(`${s.fecha}|${s.hora}`));
     if(!nuevos.length){mensajeServicios('No hay servicios faltantes: las fechas y horarios seleccionados ya existen.');return;}
     const {error}=await supabaseClient.from('servicios').insert(nuevos);if(error)throw error;
     mensajeServicios(`✅ Se crearon ${nuevos.length} servicio(s). Se omitieron ${fechas.length-nuevos.length} duplicado(s).`);await cargarServiciosAdmin();
