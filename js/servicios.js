@@ -33,9 +33,9 @@ async function crearServiciosMes() {
   const dias=[];if($serv('diaDomingo').checked)dias.push(0);if($serv('diaJueves').checked)dias.push(4);if($serv('diaSabado').checked)dias.push(6);
   if(!dias.length){mensajeServicios('Selecciona al menos un día de servicio.',true);return;}
   const horas={'0':$serv('horaDomingo').value,'4':$serv('horaTarde').value,'6':$serv('horaTarde').value};
-  const tipos={'0':$serv('tipoDomingo').value.trim(),'4':$serv('tipoJueves').value.trim(),'6':$serv('tipoSabado').value.trim()};
+  // La restricción servicios_tipo_check solo permite estos tipos exactos.
+  const tipos={'0':'Domingo','4':'Jueves','6':'Sábado'};
   if(dias.some(d=>!horas[d])){mensajeServicios('Completa los horarios seleccionados.',true);return;}
-  if(dias.some(d=>!tipos[d])){mensajeServicios('Completa el tipo de servicio para cada día seleccionado.',true);return;}
   const boton=$serv('crearMesServicios');boton.disabled=true;boton.textContent='Creando…';
   try {
     const fechas=fechasDelMes(mes,dias);const {data:existentes,error:err}=await supabaseClient.from('servicios').select('fecha,hora').gte('fecha',`${mes}-01`).lte('fecha',`${mes}-${String(new Date(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0).getDate()).padStart(2,'0')}`);
