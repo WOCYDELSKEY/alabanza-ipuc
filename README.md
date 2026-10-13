@@ -41,3 +41,11 @@
 - No se reemplazan ni se borran datos de octubre.
 - La tabla nueva habilita políticas para los roles `anon` y `authenticated`, siguiendo el modo de acceso actual del proyecto. Como el módulo administrativo aún no tiene autenticación, protege el acceso al sitio y endurece RLS antes de exponerlo públicamente.
 - La comprobación de sintaxis JavaScript se realizó localmente, pero la conexión real y las políticas deben probarse en tu propio proyecto Supabase.
+
+
+## Gestión de servicios y generación desde la interfaz
+
+- En `Gestión → Servicios`, elige el mes, los días y horarios y pulsa **Crear servicios faltantes del mes**. Los horarios sugeridos son jueves/sábado 18:30 y domingo 10:00; puedes cambiarlos antes de crear. La operación evita duplicar servicios con la misma fecha y hora.
+- Los servicios se pueden activar/desactivar. La interfaz impide eliminar servicios que tengan asignaciones.
+- En Inicio, selecciona el mes y pulsa **Generar asignaciones**. El sistema comprueba que existan servicios activos y que no tengan asignaciones previas, pide confirmación y luego ejecuta el generador.
+- La creación de servicios y la generación deben probarse en el sitio publicado conectado a Supabase. La aplicación usa las tablas actuales `servicios` y `asignaciones`; no se agregó ninguna tabla nueva.
