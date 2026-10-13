@@ -1,1 +1,44 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>📆 Disponibilidad · Alabanza IPUC</title><link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/layout.css"><link rel="stylesheet" href="../css/admin.css"></head><body><div class="app-layout"><aside class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div><nav class="sidebar-nav"><div class="menu-label">Navegación</div><a class="menu-link" href="../index.html">🏠 Inicio</a><a class="menu-link" href="integrantes.html">👥 Integrantes</a><a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a><a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a><a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a><a class="menu-link" href="reglas.html">⚙️ Reglas</a><a class="menu-link" href="servicios.html">🗓️ Servicios</a><a class="menu-link" href="estadisticas.html">📊 Estadísticas</a></nav></aside><div class="app-main"><header class="app-topbar"><strong>📆 Disponibilidad</strong><span class="status">Sistema activo</span></header><main class="app-content"><section class="encabezado-pagina"><div><h1>📆 Disponibilidad</h1><p>Módulo en construcción</p></div></section><div class="admin-card"><h2>Próximo paso</h2><p>Este módulo se conectará a Supabase sin alterar el cronograma que ya funciona.</p></div></main></div></div></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Disponibilidad · Alabanza IPUC</title>
+<link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/layout.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/disponibilidad.css">
+</head>
+<body>
+<div class="app-layout">
+<aside id="sidebar" class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div>
+<nav class="sidebar-nav"><div class="menu-label">Navegación</div>
+<a class="menu-link" href="../index.html">🏠 Inicio / Cronograma</a><a class="menu-link" href="integrantes.html">👥 Integrantes</a><a class="menu-link activo" href="disponibilidad.html">📆 Disponibilidad</a><a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a><a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a><a class="menu-link" href="reglas.html">⚙️ Reglas</a><a class="menu-link" href="servicios.html">🗓️ Servicios</a><a class="menu-link" href="estadisticas.html">📊 Estadísticas</a></nav></aside>
+<div id="menuOverlay" class="menu-overlay" onclick="cerrarMenu()"></div>
+<div class="app-main"><header class="app-topbar"><button class="menu-toggle" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><strong>📆 Gestión de disponibilidad</strong><span class="status">Sistema activo</span></header>
+<main class="app-content disponibilidad-page">
+<section class="encabezado-pagina"><div><h1>📆 Disponibilidad</h1><p>Administra los días habituales y las excepciones por fechas o periodos.</p></div></section>
+<div id="mensajeEstado" class="mensaje-estado" role="status">Cargando información…</div>
+<section class="disp-resumen"><article><small>Integrantes activos</small><strong id="totalIntegrantes">—</strong></article><article><small>Registros especiales</small><strong id="totalExcepciones">—</strong></article></section>
+<section class="disp-panel">
+<h2>1. Disponibilidad habitual por día de la semana</h2>
+<p class="disp-ayuda">Selecciona una persona y marca los días en los que normalmente puede participar. Una excepción por fecha tendrá prioridad sobre esta configuración.</p>
+<div class="disp-form-fila"><label for="integranteSelect">Integrante</label><select id="integranteSelect"><option value="">Cargando integrantes…</option></select><button id="btnCargarSemana" class="btn-secundario" type="button">Consultar</button></div>
+<div id="diasSemana" class="dias-semana"></div>
+<div class="disp-acciones"><button id="btnGuardarSemana" class="btn-principal" type="button">Guardar disponibilidad habitual</button></div>
+</section>
+<section class="disp-panel">
+<h2>2. Fechas específicas y periodos</h2>
+<p class="disp-ayuda">Usa una fecha única o un rango. “Disponible” habilita a la persona incluso si ese día no está marcado habitualmente; “No disponible” la excluye del generador y de la búsqueda de reemplazos.</p>
+<form id="formExcepcion" class="disp-form">
+<input type="hidden" id="excepcionId">
+<label>Integrante<select id="excepcionIntegrante" required><option value="">Selecciona un integrante…</option></select></label>
+<div class="disp-form-fila"><label>Tipo de registro<select id="tipoFecha"><option value="unica">Fecha específica</option><option value="periodo">Periodo de fechas</option></select></label><label>Estado<select id="estadoDisponibilidad"><option value="false">No disponible</option><option value="true">Disponible</option></select></label></div>
+<div class="disp-form-fila"><label>Desde <input id="fechaInicio" type="date" required></label><label id="labelFechaFin" class="oculto">Hasta <input id="fechaFin" type="date"></label></div>
+<label>Motivo (opcional)<input id="motivo" maxlength="180" placeholder="Ej. viaje, estudio, compromiso familiar"></label>
+<div class="disp-acciones"><button id="btnGuardarExcepcion" class="btn-principal" type="submit">Guardar registro</button><button id="btnCancelarEdicion" class="btn-secundario oculto" type="button">Cancelar edición</button></div>
+</form>
+</section>
+<section class="disp-panel">
+<div class="disp-lista-cabecera"><div><h2>3. Registros especiales</h2><p class="disp-ayuda">Puedes filtrar por integrante y editar o eliminar registros.</p></div><label>Filtrar<select id="filtroIntegrante"><option value="">Todos los integrantes</option></select></label></div>
+<div class="disp-tabla-contenedor"><table class="disp-tabla"><thead><tr><th>Integrante</th><th>Fechas</th><th>Estado</th><th>Motivo</th><th>Acciones</th></tr></thead><tbody id="listaExcepciones"><tr><td colspan="5">Cargando…</td></tr></tbody></table></div>
+</section>
+</main></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabase.js"></script><script src="../js/disponibilidad.js"></script>
+</body></html>
