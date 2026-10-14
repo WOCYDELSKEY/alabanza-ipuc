@@ -49,3 +49,26 @@
 - Los servicios se pueden activar/desactivar. La interfaz impide eliminar servicios que tengan asignaciones.
 - En Inicio, selecciona el mes y pulsa **Generar asignaciones**. El sistema comprueba que existan servicios activos y que no tengan asignaciones previas, pide confirmación y luego ejecuta el generador.
 - La creación de servicios y la generación deben probarse en el sitio publicado conectado a Supabase. La aplicación usa las tablas actuales `servicios` y `asignaciones`; no se agregó ninguna tabla nueva.
+
+
+## Seguimiento de confirmaciones y reemplazos
+
+- En `Gestión → Confirmaciones`, selecciona el mes para ver el estado de cada asignación: pendiente, confirmado, no puede o reemplazado.
+- Usa **Copiar enlace** para copiar el enlace personal de confirmación, o **WhatsApp** para preparar un mensaje individual. El envío al contacto o grupo sigue siendo manual.
+- Si una asignación anterior no tiene `token_confirmacion`, el módulo genera y guarda uno al solicitar el enlace.
+- Las asignaciones nuevas creadas por el generador y las asignaciones de reemplazo reciben un token desde el momento de su creación.
+- En `Gestión → Reemplazos`, puedes revisar los reemplazos registrados por mes y preparar el mensaje para el reemplazante.
+- Para registrar un reemplazo, abre el servicio desde Inicio y utiliza la opción de reemplazo que ya valida disponibilidad y reglas musicales.
+- Esta actualización no requiere tablas nuevas ni ejecutar SQL. Es necesario que las políticas de Supabase permitan consultar y actualizar `asignaciones`, `confirmaciones`, `reemplazos`, `integrantes` y `servicios`.
+- La sintaxis JavaScript se revisó localmente. Prueba el acceso y los cambios contra tu Supabase publicado; no se ha probado desde aquí una conexión real a tu proyecto.
+
+
+## Seguridad Supabase (instalación inicial)
+
+1. En Supabase Dashboard abre **Authentication → Users → Add user** y crea la cuenta del primer administrador. Usa un correo que controles y una contraseña única; no la incluyas en GitHub. Si se ofrece la opción, confirma el correo para facilitar la primera prueba.
+2. En **SQL Editor**, ejecuta `supabase_seguridad.sql`. Este script reemplaza las políticas abiertas de desarrollo de las diez tablas objetivo por políticas de administrador.
+3. Abre `supabase_primer_administrador.sql`, reemplaza las dos apariciones de `REEMPLAZA_POR_TU_CORREO` por el correo de la cuenta recién creada y ejecuta el script.
+4. Publica los archivos de esta versión en GitHub Pages. Inicia sesión en `login.html`.
+5. Prueba con un enlace de confirmación real que `CONFIRMO` y `NO PUEDO` funcionen y que el panel administrativo siga cargando datos.
+
+**Importante:** el SQL cambia permisos de base de datos. Haz una copia de seguridad antes de ejecutarlo y no borres tu usuario de Auth. La función pública de confirmación solo permite consultar/responder usando un token de asignación válido. La cuenta inicial se agrega mediante SQL Editor, no mediante registro público.

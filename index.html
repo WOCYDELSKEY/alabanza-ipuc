@@ -8,7 +8,7 @@
 .btn-generar-cronograma{padding:10px 14px;border:0;border-radius:8px;background:#334155;color:#fff;font-weight:600;cursor:pointer}.btn-generar-cronograma:disabled{opacity:.6;cursor:wait}.estado-generador-cronograma{margin:0 0 12px;color:#334155}.btn-cronograma-whatsapp{padding:10px 14px;border:0;border-radius:8px;background:#168447;color:#fff;font-weight:600;cursor:pointer}.btn-cronograma-whatsapp:hover{filter:brightness(.94)}
 .modal-whatsapp-cronograma{display:none;position:fixed;inset:0;z-index:1200;background:rgba(15,23,42,.62);padding:18px;align-items:center;justify-content:center}.modal-whatsapp-cronograma.abierto{display:flex}.modal-whatsapp-contenido{background:#fff;color:#172033;width:min(760px,100%);max-height:90vh;overflow:auto;border-radius:14px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.modal-whatsapp-acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.modal-whatsapp-acciones button{padding:10px 14px;border:0;border-radius:8px;cursor:pointer;font-weight:600}.btn-copiar-mensaje{background:#e8eef6;color:#172033}.btn-abrir-whatsapp{background:#168447;color:white}.btn-cerrar-mensaje{background:#f1f5f9;color:#172033}.modal-whatsapp-contenido textarea{box-sizing:border-box;width:100%;min-height:340px;resize:vertical;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.5 system-ui,sans-serif}.modal-whatsapp-contenido p{color:#475569}
 </style>
-</head><body>
+<style>html.auth-pending body{visibility:hidden}</style></head><body>
 <div class="app-layout">
 <aside id="sidebar" class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div><nav class="sidebar-nav">
 <div class="menu-label">Principal</div><a class="menu-link activo" href="index.html">🏠 <span>Inicio</span></a><a class="menu-link" href="#cronograma">📅 <span>Cronograma</span></a>
@@ -36,5 +36,5 @@
     <p id="estadoCopiarMensaje" aria-live="polite"></p>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script><script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script><script src="js/auth-guard.js"></script><script src="js/app.js"></script>
 </body></html>
