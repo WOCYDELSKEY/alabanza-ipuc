@@ -1174,6 +1174,11 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
                 estado:
                     "Pendiente",
 
+                token_confirmacion:
+                    (typeof crypto !== "undefined" && crypto.randomUUID)
+                        ? crypto.randomUUID()
+                        : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`,
+
                 es_principal:
                     asignacion.rol !==
                     "Piano auxiliar"
@@ -2829,6 +2834,9 @@ async function seleccionarReemplazo(asignacionId, integranteId) {
                     integrante_id: candidato.id,
                     rol: asignacionOriginal.rol,
                     estado: "Pendiente",
+                    token_confirmacion: (typeof crypto !== "undefined" && crypto.randomUUID)
+                        ? crypto.randomUUID()
+                        : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`,
                     es_principal: asignacionOriginal.es_principal,
                     reemplaza_asignacion_id: asignacionOriginal.id
                 })
