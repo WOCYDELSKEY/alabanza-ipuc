@@ -1,0 +1,57 @@
+/* Botones del módulo de reemplazos */
+.panel-reemplazos .btn-recargar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 11px 16px;
+  border: 1px solid #1e3a8a;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+  color: #fff;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 3px 9px rgba(23, 37, 84, .16);
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.panel-reemplazos .btn-recargar:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(23, 37, 84, .2);
+}
+.panel-reemplazos .btn-recargar:focus-visible,
+.panel-reemplazos .btn-whatsapp-reemplazo:focus-visible {
+  outline: 3px solid #bfdbfe;
+  outline-offset: 3px;
+}
+.panel-reemplazos .btn-whatsapp-reemplazo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 2px;
+  padding: 9px 13px;
+  border: 1px solid #86efac;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(22, 101, 52, .08);
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.panel-reemplazos .btn-whatsapp-reemplazo:hover {
+  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 11px rgba(22, 101, 52, .15);
+}
+.panel-reemplazos .btn-whatsapp-reemplazo:active,
+.panel-reemplazos .btn-recargar:active { transform: translateY(0); }
+@media(max-width:600px) {
+  .panel-reemplazos .btn-recargar { width: 100%; }
+}
