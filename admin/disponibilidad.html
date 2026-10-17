@@ -21,7 +21,7 @@
 <p class="disp-ayuda">Selecciona una persona y marca los días en los que normalmente puede participar. Una excepción por fecha tendrá prioridad sobre esta configuración.</p>
 <div class="disp-form-fila"><label for="integranteSelect">Integrante</label><select id="integranteSelect"><option value="">Cargando integrantes…</option></select><button id="btnCargarSemana" class="btn-secundario" type="button">Consultar</button></div>
 <div id="diasSemana" class="dias-semana"></div>
-<div class="disp-acciones"><button id="btnGuardarSemana" class="btn-principal" type="button">Guardar disponibilidad habitual</button></div>
+<div class="disp-acciones"><button id="btnGuardarSemana" class="btn-principal btn-guardar-disponibilidad" type="button">💾 Guardar disponibilidad habitual</button></div>
 </section>
 <section class="disp-panel">
 <h2>2. Fechas específicas y periodos</h2>
@@ -32,7 +32,7 @@
 <div class="disp-form-fila"><label>Tipo de registro<select id="tipoFecha"><option value="unica">Fecha específica</option><option value="periodo">Periodo de fechas</option></select></label><label>Estado<select id="estadoDisponibilidad"><option value="false">No disponible</option><option value="true">Disponible</option></select></label></div>
 <div class="disp-form-fila"><label>Desde <input id="fechaInicio" type="date" required></label><label id="labelFechaFin" class="oculto">Hasta <input id="fechaFin" type="date"></label></div>
 <label>Motivo (opcional)<input id="motivo" maxlength="180" placeholder="Ej. viaje, estudio, compromiso familiar"></label>
-<div class="disp-acciones"><button id="btnGuardarExcepcion" class="btn-principal" type="submit">Guardar registro</button><button id="btnCancelarEdicion" class="btn-secundario oculto" type="button">Cancelar edición</button></div>
+<div class="disp-acciones"><button id="btnGuardarExcepcion" class="btn-principal btn-guardar-registro" type="submit">📌 Guardar registro</button><button id="btnCancelarEdicion" class="btn-secundario oculto" type="button">Cancelar edición</button></div>
 </form>
 </section>
 <section class="disp-panel">
