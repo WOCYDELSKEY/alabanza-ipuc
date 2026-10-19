@@ -1,1 +1,72 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>📊 Estadísticas · Alabanza IPUC</title><link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/layout.css"><link rel="stylesheet" href="../css/admin.css"><style>html.auth-pending body{visibility:hidden}</style></head><body><div class="app-layout"><aside class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div><nav class="sidebar-nav"><div class="menu-label">Navegación</div><a class="menu-link" href="../index.html">🏠 Inicio</a><a class="menu-link" href="integrantes.html">👥 Integrantes</a><a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a><a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a><a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a><a class="menu-link" href="reglas.html">⚙️ Reglas</a><a class="menu-link" href="servicios.html">🗓️ Servicios</a><a class="menu-link" href="estadisticas.html">📊 Estadísticas</a></nav></aside><div class="app-main"><header class="app-topbar"><strong>📊 Estadísticas</strong><span class="status">Sistema activo</span></header><main class="app-content"><section class="encabezado-pagina"><div><h1>📊 Estadísticas</h1><p>Módulo en construcción</p></div></section><div class="admin-card"><h2>Próximo paso</h2><p>Este módulo se conectará a Supabase sin alterar el cronograma que ya funciona.</p></div></main></div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabase.js"></script><script src="../js/auth-guard.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Estadísticas · Alabanza IPUC</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/estadisticas.css">
+  <style>html.auth-pending body{visibility:hidden}</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div>
+    <nav class="sidebar-nav">
+      <div class="menu-label">Navegación</div>
+      <a class="menu-link" href="../index.html">🏠 Inicio</a>
+      <a class="menu-link" href="integrantes.html">👥 Integrantes</a>
+      <a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a>
+      <a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a>
+      <a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a>
+      <a class="menu-link" href="reglas.html">⚙️ Reglas</a>
+      <a class="menu-link" href="servicios.html">🗓️ Servicios</a>
+      <a class="menu-link activo" href="estadisticas.html">📊 Estadísticas</a>
+    </nav>
+  </aside>
+  <div class="app-main">
+    <header class="app-topbar"><button class="menu-toggle" type="button" aria-label="Abrir menú" onclick="toggleMenuEstadisticas()">☰</button><strong>📊 Estadísticas e informes</strong><span class="status">Sistema activo</span></header>
+    <main class="app-content">
+      <section class="encabezado-pagina estadisticas-encabezado">
+        <div><h1>📊 Estadísticas e informes</h1><p>Consulta la participación, las confirmaciones y la distribución de servicios por mes.</p></div>
+        <div class="estadisticas-filtros"><label for="mesEstadisticas">Mes del cronograma</label><input type="month" id="mesEstadisticas"><button class="btn-recargar" id="actualizarEstadisticas">↻ Actualizar</button><button class="btn-exportar" id="exportarEstadisticas">⇩ Exportar CSV</button></div>
+      </section>
+      <div id="mensajeEstadisticas" class="mensaje-estadisticas" role="status" aria-live="polite">Cargando estadísticas…</div>
+      <section class="estadisticas-kpis" aria-label="Resumen del mes">
+        <article class="estadistica-kpi"><span class="kpi-icono">🗓️</span><div><p>Servicios registrados</p><strong id="kpiServicios">—</strong><small id="kpiServiciosDetalle">Del mes seleccionado</small></div></article>
+        <article class="estadistica-kpi"><span class="kpi-icono">🎼</span><div><p>Asignaciones</p><strong id="kpiAsignaciones">—</strong><small>Incluye asignaciones de reemplazo</small></div></article>
+        <article class="estadistica-kpi"><span class="kpi-icono">✅</span><div><p>Confirmadas</p><strong id="kpiConfirmadas">—</strong><small id="kpiConfirmadasDetalle">Porcentaje de asignaciones</small></div></article>
+        <article class="estadistica-kpi"><span class="kpi-icono">⏳</span><div><p>Pendientes</p><strong id="kpiPendientes">—</strong><small>Esperando respuesta</small></div></article>
+        <article class="estadistica-kpi"><span class="kpi-icono">🔄</span><div><p>Reemplazos registrados</p><strong id="kpiReemplazos">—</strong><small id="kpiReemplazosDetalle">Del mes seleccionado</small></div></article>
+      </section>
+      <section class="estadisticas-paneles">
+        <article class="admin-card estadisticas-panel">
+          <div class="panel-titulo"><div><h2>Distribución por estado</h2><p>Estado actual de las asignaciones del mes.</p></div></div>
+          <div id="graficaEstados" class="grafica-barras" aria-label="Distribución por estado"></div>
+          <div id="leyendaEstados" class="leyenda-estados"></div>
+        </article>
+        <article class="admin-card estadisticas-panel">
+          <div class="panel-titulo"><div><h2>Participación por rol</h2><p>Cantidad de asignaciones por función musical.</p></div></div>
+          <div id="graficaRoles" class="grafica-barras" aria-label="Participación por rol"></div>
+        </article>
+      </section>
+      <section class="admin-card tabla-estadisticas-card">
+        <div class="panel-titulo panel-titulo-tabla"><div><h2>Participación por integrante</h2><p>Incluye integrantes activos que todavía no tienen asignaciones en el mes.</p></div><label class="busqueda-estadisticas">Buscar integrante<input id="buscarEstadistica" type="search" placeholder="Nombre o instrumento"></label></div>
+        <div class="tabla-scroll"><table class="tabla-estadisticas"><thead><tr><th>Integrante</th><th>Instrumento</th><th>Asignaciones</th><th>Confirmadas</th><th>Pendientes</th><th>No puede</th><th>Reemplazado</th></tr></thead><tbody id="tablaParticipacion"><tr><td colspan="7">Cargando datos…</td></tr></tbody></table></div>
+      </section>
+      <section class="admin-card tabla-estadisticas-card">
+        <div class="panel-titulo"><div><h2>Servicios del mes</h2><p>Resumen de servicios activos e inactivos.</p></div></div>
+        <div class="tabla-scroll"><table class="tabla-estadisticas"><thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Estado</th><th>Asignaciones</th><th>Confirmadas</th><th>Pendientes</th></tr></thead><tbody id="tablaServiciosEstadisticas"><tr><td colspan="7">Cargando datos…</td></tr></tbody></table></div>
+      </section>
+    </main>
+  </div>
+</div>
+<div id="menuOverlayEstadisticas" class="menu-overlay" onclick="cerrarMenuEstadisticas()"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/estadisticas.js"></script>
+</body>
+</html>
