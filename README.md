@@ -72,3 +72,12 @@
 5. Prueba con un enlace de confirmación real que `CONFIRMO` y `NO PUEDO` funcionen y que el panel administrativo siga cargando datos.
 
 **Importante:** el SQL cambia permisos de base de datos. Haz una copia de seguridad antes de ejecutarlo y no borres tu usuario de Auth. La función pública de confirmación solo permite consultar/responder usando un token de asignación válido. La cuenta inicial se agrega mediante SQL Editor, no mediante registro público.
+
+
+## Módulo de estadísticas e informes
+
+- `admin/estadisticas.html`, `css/estadisticas.css` y `js/estadisticas.js` muestran estadísticas por mes a partir de las tablas existentes `servicios`, `asignaciones`, `integrantes` y `reemplazos`.
+- Incluye resumen de servicios, asignaciones, confirmaciones, pendientes y reemplazos; distribución por estado y rol; participación por integrante; detalle por servicio y exportación CSV.
+- No requiere ejecutar SQL ni crear tablas. El módulo utiliza la sesión administrativa y las políticas RLS ya configuradas.
+- Después de publicar, abre **Gestión → Estadísticas**, elige el mes y pulsa **Actualizar**. Prueba también **Exportar CSV**.
+- Los conteos reflejan el estado actual de las asignaciones. El historial de cambios todavía no está implementado; para auditar cambios pasados será necesario un módulo independiente de historial.
