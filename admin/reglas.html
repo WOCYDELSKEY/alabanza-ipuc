@@ -1,1 +1,73 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>⚙️ Reglas · Alabanza IPUC</title><link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/layout.css"><link rel="stylesheet" href="../css/admin.css"><style>html.auth-pending body{visibility:hidden}</style></head><body><div class="app-layout"><aside class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div><nav class="sidebar-nav"><div class="menu-label">Navegación</div><a class="menu-link" href="../index.html">🏠 Inicio</a><a class="menu-link" href="integrantes.html">👥 Integrantes</a><a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a><a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a><a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a><a class="menu-link" href="reglas.html">⚙️ Reglas</a><a class="menu-link" href="servicios.html">🗓️ Servicios</a><a class="menu-link" href="estadisticas.html">📊 Estadísticas</a></nav></aside><div class="app-main"><header class="app-topbar"><strong>⚙️ Reglas</strong><span class="status">Sistema activo</span></header><main class="app-content"><section class="encabezado-pagina"><div><h1>⚙️ Reglas</h1><p>Módulo en construcción</p></div></section><div class="admin-card"><h2>Próximo paso</h2><p>Este módulo se conectará a Supabase sin alterar el cronograma que ya funciona.</p></div></main></div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabase.js"></script><script src="../js/auth-guard.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reglas de asignación · Alabanza IPUC</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/reglas.css">
+  <style>html.auth-pending body{visibility:hidden}</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div>
+    <nav class="sidebar-nav">
+      <div class="menu-label">Navegación</div>
+      <a class="menu-link" href="../index.html">🏠 Inicio / Cronograma</a>
+      <a class="menu-link" href="integrantes.html">👥 Integrantes</a>
+      <a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a>
+      <a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a>
+      <a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a>
+      <a class="menu-link activo" href="reglas.html">⚙️ Reglas</a>
+      <a class="menu-link" href="servicios.html">🗓️ Servicios</a>
+      <a class="menu-link" href="estadisticas.html">📊 Estadísticas</a>
+    </nav>
+  </aside>
+  <div id="menuOverlayReglas" class="menu-overlay"></div>
+  <div class="app-main">
+    <header class="app-topbar"><button class="menu-toggle" id="btnMenuReglas" type="button" aria-label="Abrir menú">☰</button><strong>⚙️ Reglas de asignación</strong><span class="status">Sistema activo</span></header>
+    <main class="app-content reglas-page">
+      <section class="encabezado-pagina reglas-encabezado">
+        <div><h1>⚙️ Reglas de asignación</h1><p>Administra las condiciones que utiliza el generador para preparar el cronograma.</p></div>
+        <button class="reglas-btn reglas-btn-secundario" id="btnActualizarReglas" type="button">↻ Actualizar</button>
+      </section>
+      <div id="mensajeReglas" class="mensaje-reglas" role="status" aria-live="polite">Cargando reglas…</div>
+      <section class="reglas-resumen" aria-label="Resumen de reglas">
+        <article class="regla-resumen-card"><span>📋</span><div><small>Reglas registradas</small><strong id="totalReglas">—</strong></div></article>
+        <article class="regla-resumen-card"><span>✅</span><div><small>Reglas activas</small><strong id="totalReglasActivas">—</strong></div></article>
+        <article class="regla-resumen-card"><span>⏸️</span><div><small>Reglas inactivas</small><strong id="totalReglasInactivas">—</strong></div></article>
+      </section>
+      <section class="reglas-layout">
+        <article class="admin-card reglas-form-card">
+          <div class="reglas-panel-titulo"><div><h2>＋ Crear restricción entre integrantes</h2><p>Evita que dos personas específicas queden asignadas al mismo servicio.</p></div></div>
+          <form id="formNuevaRegla" class="form-regla-pareja">
+            <label>Primer integrante<select id="integranteUno" required><option value="">Selecciona integrante…</option></select></label>
+            <div class="regla-conector" aria-hidden="true">NO DEBE COINCIDIR CON</div>
+            <label>Segundo integrante<select id="integranteDos" required><option value="">Selecciona integrante…</option></select></label>
+            <button class="reglas-btn reglas-btn-principal" type="submit" id="btnCrearRegla">＋ Guardar restricción</button>
+          </form>
+          <p class="reglas-ayuda">Esta restricción se guardará en Supabase y el generador la consultará en las próximas generaciones. No modifica los cronogramas existentes.</p>
+        </article>
+        <article class="admin-card reglas-info-card">
+          <h2>ℹ️ Reglas generales</h2>
+          <p>Activa o desactiva las condiciones generales que ya están registradas.</p>
+          <ul><li><strong>Sin roles duplicados:</strong> una persona no puede cubrir dos funciones en el mismo servicio.</li><li><strong>Líder y piano:</strong> quien sirve como voz líder no debe tocar piano en ese mismo servicio.</li><li><strong>No coincidencia:</strong> dos integrantes concretos no pueden quedar asignados al mismo servicio.</li></ul>
+          <p class="reglas-aviso">Los cambios afectan las próximas generaciones del cronograma; no reasignan automáticamente servicios ya creados.</p>
+        </article>
+      </section>
+      <section class="admin-card reglas-listado-card">
+        <div class="reglas-panel-titulo reglas-listado-titulo"><div><h2>Reglas configuradas</h2><p>Activa, desactiva o ajusta las restricciones de integrantes.</p></div><label class="reglas-busqueda">Buscar regla<input type="search" id="buscarRegla" placeholder="Nombre de integrante o regla…"></label></div>
+        <div id="listaReglas" class="lista-reglas"><div class="regla-vacia">Cargando reglas…</div></div>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/reglas.js"></script>
+</body>
+</html>
