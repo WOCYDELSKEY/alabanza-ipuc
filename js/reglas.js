@@ -90,7 +90,8 @@
     const otra = estado.reglas.find(r => r.tipo === 'personas_no_pueden_coincidir' && String(r.id) !== String(id) && ((String(r.configuracion?.integrante_1) === uno && String(r.configuracion?.integrante_2) === dos) || (String(r.configuracion?.integrante_1) === dos && String(r.configuracion?.integrante_2) === uno)));
     if (otra) return mensaje('Ya existe una regla para esa pareja de integrantes.', 'error');
     const button = card.querySelector('[data-action="guardar-pareja"]'); button.disabled = true;
-    const { error } = await supabaseClient.from('reglas_asignacion').update({ configuracion: { integrante_1: uno, integrante_2: dos } }).eq('id', id);
+    const nombreRegla = `No coincidir: ${nombreIntegrante(uno)} y ${nombreIntegrante(dos)}`;
+    const { error } = await supabaseClient.from('reglas_asignacion').update({ nombre: nombreRegla, configuracion: { integrante_1: uno, integrante_2: dos } }).eq('id', id);
     if (error) { mensaje(`No se pudo guardar la pareja: ${error.message}`, 'error'); button.disabled = false; return; }
     mensaje('Restricción actualizada correctamente.', 'exito'); await cargar();
   }
@@ -102,7 +103,8 @@
     const existe = estado.reglas.some(r => r.tipo === 'personas_no_pueden_coincidir' && ((String(r.configuracion?.integrante_1) === uno && String(r.configuracion?.integrante_2) === dos) || (String(r.configuracion?.integrante_1) === dos && String(r.configuracion?.integrante_2) === uno)));
     if (existe) return mensaje('Esa restricción ya está registrada.', 'error');
     const button = $('btnCrearRegla'); button.disabled = true;
-    const { error } = await supabaseClient.from('reglas_asignacion').insert({ tipo: 'personas_no_pueden_coincidir', configuracion: { integrante_1: uno, integrante_2: dos }, activa: true });
+    const nombreRegla = `No coincidir: ${nombreIntegrante(uno)} y ${nombreIntegrante(dos)}`;
+    const { error } = await supabaseClient.from('reglas_asignacion').insert({ nombre: nombreRegla, tipo: 'personas_no_pueden_coincidir', configuracion: { integrante_1: uno, integrante_2: dos }, activa: true });
     if (error) { mensaje(`No se pudo crear la regla: ${error.message}. No se modificó ningún cronograma.`, 'error'); button.disabled = false; return; }
     $('formNuevaRegla').reset(); mensaje('Restricción creada y activada. Se aplicará al generar nuevos cronogramas.', 'exito'); await cargar(); button.disabled = false;
   }
