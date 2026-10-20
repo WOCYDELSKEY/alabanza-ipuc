@@ -81,3 +81,10 @@
 - No requiere ejecutar SQL ni crear tablas. El módulo utiliza la sesión administrativa y las políticas RLS ya configuradas.
 - Después de publicar, abre **Gestión → Estadísticas**, elige el mes y pulsa **Actualizar**. Prueba también **Exportar CSV**.
 - Los conteos reflejan el estado actual de las asignaciones. El historial de cambios todavía no está implementado; para auditar cambios pasados será necesario un módulo independiente de historial.
+
+
+## Historial de actividad
+
+- `admin/historial.html`, `css/historial.css` y `js/historial.js` muestran el historial con filtros por fechas, acción, área y texto, además de exportación CSV.
+- Antes de abrir el módulo, ejecuta `supabase_historial_actividad.sql` en Supabase SQL Editor como administrador. El script crea una tabla de solo lectura para administradores y triggers para registrar cambios en las tablas de los módulos principales.
+- El historial empieza a registrar eventos desde la instalación; no reconstruye acciones anteriores.
