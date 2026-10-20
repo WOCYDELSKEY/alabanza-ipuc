@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Historial de actividad · Alabanza IPUC</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/historial.css">
+  <style>html.auth-pending body{visibility:hidden}</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div>
+    <nav class="sidebar-nav">
+      <div class="menu-label">Navegación</div>
+      <a class="menu-link" href="../index.html">🏠 Inicio / Cronograma</a>
+      <a class="menu-link" href="integrantes.html">👥 Integrantes</a>
+      <a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a>
+      <a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a>
+      <a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a>
+      <a class="menu-link" href="reglas.html">⚙️ Reglas</a>
+      <a class="menu-link" href="servicios.html">🗓️ Servicios</a>
+      <a class="menu-link" href="estadisticas.html">📊 Estadísticas</a>
+      <a class="menu-link activo" href="historial.html">🕘 Historial</a>
+    </nav>
+  </aside>
+  <div id="menuOverlayHistorial" class="menu-overlay"></div>
+  <div class="app-main">
+    <header class="app-topbar"><button class="menu-toggle" id="btnMenuHistorial" type="button" aria-label="Abrir menú">☰</button><strong>🕘 Historial de actividad</strong><span class="status">Sistema activo</span></header>
+    <main class="app-content historial-page">
+      <section class="encabezado-pagina historial-encabezado">
+        <div><h1>🕘 Historial de actividad</h1><p>Consulta las acciones registradas en los módulos administrativos.</p></div>
+        <div class="historial-acciones"><button class="historial-btn historial-btn-secundario" id="btnActualizarHistorial" type="button">↻ Actualizar</button><button class="historial-btn historial-btn-principal" id="btnExportarHistorial" type="button">⇩ Exportar CSV</button></div>
+      </section>
+      <div id="mensajeHistorial" class="mensaje-historial" role="status" aria-live="polite">Cargando historial…</div>
+      <section class="historial-resumen" aria-label="Resumen del historial">
+        <article class="historial-kpi"><span>🧾</span><div><small>Eventos cargados</small><strong id="totalEventosHistorial">—</strong></div></article>
+        <article class="historial-kpi"><span>🕒</span><div><small>Último evento</small><strong id="ultimoEventoHistorial">—</strong></div></article>
+      </section>
+      <section class="admin-card historial-listado-card">
+        <div class="historial-filtros">
+          <label>Desde<input id="historialDesde" type="date"></label>
+          <label>Hasta<input id="historialHasta" type="date"></label>
+          <label>Tipo de acción<select id="historialAccion"><option value="">Todas</option><option>Creación</option><option>Actualización</option><option>Eliminación</option></select></label>
+          <label>Área<select id="historialEntidad"><option value="">Todas las áreas</option></select></label>
+          <label class="historial-busqueda">Buscar<input id="buscarHistorial" type="search" placeholder="Detalle, módulo o registro…"></label>
+          <button class="historial-btn historial-btn-secundario" id="btnLimpiarFiltrosHistorial" type="button">Limpiar filtros</button>
+        </div>
+        <div class="historial-nota">Se muestran hasta 500 eventos recientes. El registro empieza desde que se instala esta función; no incluye acciones anteriores.</div>
+        <div class="tabla-scroll"><table class="tabla-historial"><thead><tr><th>Fecha y hora</th><th>Acción</th><th>Área</th><th>Detalle</th><th>ID del registro</th></tr></thead><tbody id="tablaHistorial"><tr><td colspan="5">Cargando eventos…</td></tr></tbody></table></div>
+        <div id="pieHistorial" class="pie-historial"></div>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth-guard.js"></script>
+<script src="../js/historial.js"></script>
+</body>
+</html>
