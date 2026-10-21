@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Calendario de servicios · Alabanza IPUC</title>
+  <link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/layout.css"><link rel="stylesheet" href="../css/admin.css"><link rel="stylesheet" href="../css/calendario.css">
+  <style>html.auth-pending body{visibility:hidden}</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside id="sidebar" class="sidebar"><div class="sidebar-brand"><h2>🎶 Alabanza IPUC</h2><p>Líbano Central</p></div>
+    <nav class="sidebar-nav"><div class="menu-label">Navegación</div>
+      <a class="menu-link" href="../index.html">🏠 Inicio / Cronograma</a><a class="menu-link activo" href="calendario.html">🗓️ Calendario</a>
+      <a class="menu-link" href="integrantes.html">👥 Integrantes</a><a class="menu-link" href="disponibilidad.html">📆 Disponibilidad</a><a class="menu-link" href="confirmaciones.html">✅ Confirmaciones</a><a class="menu-link" href="reemplazos.html">🔄 Reemplazos</a><a class="menu-link" href="reglas.html">⚙️ Reglas</a><a class="menu-link" href="servicios.html">🗓️ Servicios</a><a class="menu-link" href="estadisticas.html">📊 Estadísticas</a><a class="menu-link" href="historial.html">🕘 Historial</a>
+    </nav>
+  </aside>
+  <div id="menuOverlayCalendario" class="menu-overlay"></div>
+  <div class="app-main"><header class="app-topbar"><button class="menu-toggle" id="btnMenuCalendario" type="button" aria-label="Abrir menú">☰</button><strong>🗓️ Calendario de servicios</strong><span class="status">Sistema activo</span></header>
+    <main class="app-content calendario-page">
+      <section class="encabezado-pagina calendario-encabezado"><div><h1>🗓️ Calendario mensual</h1><p>Consulta los servicios del mes y abre cada fecha para ver sus asignaciones.</p></div>
+        <div class="calendario-controles"><label for="mesCalendario">Mes</label><input id="mesCalendario" type="month"><label class="calendario-check"><input id="mostrarInactivos" type="checkbox" checked> Mostrar inactivos</label><button id="btnActualizarCalendario" class="btn-recargar" type="button">↻ Actualizar</button>
+        </div>
+      </section>
+      <div id="mensajeCalendario" class="mensaje-calendario" role="status" aria-live="polite">Cargando servicios…</div>
+      <section class="calendario-resumen"><article><span>🗓️</span><div><small>Servicios del mes</small><strong id="totalServiciosMes">—</strong></div></article><article><span>🎤</span><div><small>Con asignaciones</small><strong id="serviciosAsignadosMes">—</strong></div></article><article><span>⏳</span><div><small>Sin asignaciones</small><strong id="serviciosPendientesMes">—</strong></div></article></section>
+      <section class="calendario-panel"><div class="calendario-cabecera-mes"><button id="mesAnterior" type="button" aria-label="Mes anterior">←</button><h2 id="tituloMesCalendario">Calendario</h2><button id="mesSiguiente" type="button" aria-label="Mes siguiente">→</button></div>
+        <div class="calendario-dias-semana" aria-hidden="true"><span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span></div>
+        <div id="rejillaCalendario" class="rejilla-calendario"><p class="calendario-vacio">Cargando calendario…</p></div>
+        <div class="calendario-leyenda"><span><i class="punto punto-activo"></i> Servicio activo</span><span><i class="punto punto-inactivo"></i> Servicio inactivo</span><span><i class="punto punto-sin"></i> Sin asignaciones</span></div>
+      </section>
+    </main>
+  </div>
+</div>
+<div id="modalDetalleCalendario" class="modal-calendario" role="dialog" aria-modal="true" aria-labelledby="tituloDetalleCalendario"><div class="modal-calendario-contenido"><button id="cerrarDetalleCalendario" class="cerrar-modal-calendario" type="button" aria-label="Cerrar detalle">×</button><div id="contenidoDetalleCalendario"></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabase.js"></script><script src="../js/auth-guard.js"></script><script src="../js/calendario.js"></script>
+</body></html>
