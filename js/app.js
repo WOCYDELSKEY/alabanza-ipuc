@@ -1609,6 +1609,80 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
         "================================="
     );
 }
+// Reinicio seguro del cronograma del mes seleccionado.
+// Elimina asignaciones y registros de reemplazo relacionados, pero conserva servicios,
+// integrantes, reglas y disponibilidad para poder generar de nuevo con los datos actuales.
+async function reiniciarAsignacionesDesdePantalla() {
+  const selector = document.getElementById('mesCronograma');
+  const mes = selector?.value || '2026-11';
+  const estado = document.getElementById('estadoGeneradorCronograma');
+  const boton = document.getElementById('btnReiniciarCronograma');
+  if (!/^\d{4}-\d{2}$/.test(mes)) {
+    if (estado) estado.textContent = 'Selecciona un mes válido.';
+    return;
+  }
+  const [anio, numeroMes] = mes.split('-').map(Number);
+  const desde = `${mes}-01`;
+  const hasta = `${mes}-${String(new Date(anio, numeroMes, 0).getDate()).padStart(2, '0')}`;
+
+  try {
+    if (estado) estado.textContent = `Consultando asignaciones de ${mes}…`;
+    const { data: servicios, error: errServicios } = await supabaseClient
+      .from('servicios').select('id,fecha').gte('fecha', desde).lte('fecha', hasta);
+    if (errServicios) throw errServicios;
+    if (!servicios?.length) {
+      if (estado) estado.textContent = `No hay servicios registrados para ${mes}.`;
+      return;
+    }
+    const idsServicios = servicios.map(s => s.id);
+    const { data: asignaciones, error: errAsignaciones } = await supabaseClient
+      .from('asignaciones').select('id,servicio_id').in('servicio_id', idsServicios);
+    if (errAsignaciones) throw errAsignaciones;
+    if (!asignaciones?.length) {
+      if (estado) estado.textContent = `No hay asignaciones para eliminar en ${mes}. Puedes generar el cronograma directamente.`;
+      return;
+    }
+
+    const primeraConfirmacion = confirm(
+      `⚠️ VAS A ELIMINAR EL CRONOGRAMA DE ${mes}\n\n` +
+      `Se eliminarán ${asignaciones.length} asignaciones de ${servicios.length} servicios, ` +
+      `incluidos estados y enlaces de confirmación, además de los registros de reemplazos relacionados.\n\n` +
+      `Se conservarán los servicios, integrantes, reglas y disponibilidad.\n\n¿Deseas continuar?`
+    );
+    if (!primeraConfirmacion) {
+      if (estado) estado.textContent = 'Operación cancelada. No se eliminó nada.';
+      return;
+    }
+    const palabra = prompt(`Para confirmar la eliminación de ${mes}, escribe exactamente ELIMINAR:`);
+    if (palabra !== 'ELIMINAR') {
+      if (estado) estado.textContent = 'Operación cancelada. No se eliminó nada.';
+      return;
+    }
+
+    if (boton) { boton.disabled = true; boton.textContent = '⏳ Eliminando…'; }
+    if (estado) estado.textContent = `Eliminando asignaciones de ${mes}…`;
+    const idsAsignaciones = asignaciones.map(a => a.id);
+
+    // Borrar primero los registros de reemplazo que referencian las asignaciones.
+    const { error: errReemplazos } = await supabaseClient
+      .from('reemplazos').delete().in('asignacion_original_id', idsAsignaciones);
+    if (errReemplazos) throw new Error(`No se pudieron limpiar los reemplazos relacionados: ${errReemplazos.message}`);
+
+    const { error: errBorrar } = await supabaseClient
+      .from('asignaciones').delete().in('servicio_id', idsServicios);
+    if (errBorrar) throw new Error(`No se pudieron eliminar las asignaciones: ${errBorrar.message}`);
+
+    if (estado) estado.textContent = `✅ Se eliminaron las asignaciones de ${mes}. Ya puedes generar un nuevo cronograma con las reglas y disponibilidades actuales.`;
+    await cargarCronograma(mes);
+  } catch (error) {
+    console.error('Error reiniciando asignaciones del mes:', error);
+    if (estado) estado.textContent = `❌ No se pudo reiniciar el cronograma: ${error.message || error}. No intentes generar todavía; revisa el mensaje y vuelve a consultar.`;
+    alert(`No se pudo completar la eliminación.\n\n${error.message || error}`);
+  } finally {
+    if (boton) { boton.disabled = false; boton.textContent = '🗑️ Eliminar asignaciones del mes'; }
+  }
+}
+
 // Generación desde la interfaz: evita usar manualmente la consola del navegador.
 async function generarCronogramaDesdePantalla() {
   const selector = document.getElementById('mesCronograma');
