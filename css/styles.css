@@ -419,3 +419,14 @@ footer{text-align:center;padding:25px;color:#64748b;font-size:.9rem}
         text-align: center;
     }
 }
+
+
+/* Acción destructiva: reiniciar las asignaciones del mes */
+.btn-reiniciar-cronograma {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .7rem 1rem; border: 1px solid #b42318; border-radius: 10px;
+  background: #fff; color: #b42318; font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn-reiniciar-cronograma:hover { background: #fff1f0; }
+.btn-reiniciar-cronograma:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 760px) { .btn-reiniciar-cronograma { width: 100%; } }
