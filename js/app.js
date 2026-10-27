@@ -454,15 +454,55 @@ async function generarCronograma(modoSimulacion = false, mesObjetivo = "2026-11"
 
     }
 
+    function instrumentosDe(persona) {
+        const lista = Array.isArray(persona.instrumentos) && persona.instrumentos.length
+            ? persona.instrumentos
+            : (persona.instrumento ? [persona.instrumento] : []);
+        return lista;
+    }
+
+    function rolComoInstrumento(rol) {
+        if (rol === "Piano principal" || rol === "Piano auxiliar") return "Piano";
+        return rol;
+    }
+
+    // Cuenta las participaciones por instrumento, no solo el total de servicios.
+    // Así, un músico que domina varios instrumentos puede rotar entre ellos.
+    function claveParticipacionInstrumento(rol) {
+        const instrumento = rolComoInstrumento(rol);
+        const claves = {
+            "Batería": "bateria",
+            "Bajo": "bajo",
+            "Guitarra eléctrica": "guitarra",
+            "Piano": "piano",
+            "Voz líder": "lider",
+            "Coro": "coro"
+        };
+        return claves[instrumento] || "auxiliar";
+    }
+
+    function participacionesEnRol(persona, rol) {
+        const clave = claveParticipacionInstrumento(rol);
+        return participacionesPorRol[persona.id]?.[clave] || 0;
+    }
+
+    function ordenarPorRotacionInstrumento(lista, rol) {
+        return [...lista].sort((a, b) => {
+            // Prioridad: quien menos veces ha realizado este instrumento.
+            const diferenciaRol = participacionesEnRol(a, rol) - participacionesEnRol(b, rol);
+            if (diferenciaRol !== 0) return diferenciaRol;
+            // Desempate: repartir también la cantidad total de servicios.
+            const diferenciaTotal = (participaciones[a.id] || 0) - (participaciones[b.id] || 0);
+            if (diferenciaTotal !== 0) return diferenciaTotal;
+            return a.nombre.localeCompare(b.nombre, "es");
+        });
+    }
+
     function tieneRol(persona, rol) {
-
-        return (
-            rolesPorIntegrante[persona.id]
-                ?.some(r =>
-                    r.rol === rol
-                )
-        );
-
+        const rolInstrumental = rolComoInstrumento(rol);
+        const esInstrumento = ["Batería", "Bajo", "Guitarra eléctrica", "Piano", "Coro"].includes(rolInstrumental);
+        const tieneRolRegistrado = (rolesPorIntegrante[persona.id] || []).some(r => r.rol === rol);
+        return tieneRolRegistrado || (esInstrumento && instrumentosDe(persona).includes(rolInstrumental));
     }
 
     function puedeSerPrincipal(persona, rol) {
@@ -534,7 +574,7 @@ async function generarCronograma(modoSimulacion = false, mesObjetivo = "2026-11"
                 lider = false
             } = opciones;
         
-            return integrantes.filter(persona => {
+            const candidatos = integrantes.filter(persona => {
         
                 // ==========================================
                 // 1. DEBE TENER EL ROL
@@ -617,6 +657,8 @@ async function generarCronograma(modoSimulacion = false, mesObjetivo = "2026-11"
         
                 return true;
             });
+
+            return ordenarPorRotacionInstrumento(candidatos, rol);
         }
     function registrar(
         persona,
@@ -875,7 +917,7 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
             );
 
         candidatos =
-            ordenarPorParticipacion(candidatos);
+            ordenarPorRotacionInstrumento(candidatos, "Batería");
 
         const bateria = candidatos[0];
 
@@ -955,17 +997,19 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
         }
 
         parejas.sort((a, b) => {
+            // Primero equilibrar las participaciones específicas de bajo y guitarra.
+            const instrumentoA =
+                participacionesEnRol(a.bajo, "Bajo") +
+                participacionesEnRol(a.guitarra, "Guitarra eléctrica");
+            const instrumentoB =
+                participacionesEnRol(b.bajo, "Bajo") +
+                participacionesEnRol(b.guitarra, "Guitarra eléctrica");
+            if (instrumentoA !== instrumentoB) return instrumentoA - instrumentoB;
 
-            const totalA =
-                participaciones[a.bajo.id] +
-                participaciones[a.guitarra.id];
-
-            const totalB =
-                participaciones[b.bajo.id] +
-                participaciones[b.guitarra.id];
-
+            // Después equilibrar la carga total de cada pareja.
+            const totalA = (participaciones[a.bajo.id] || 0) + (participaciones[a.guitarra.id] || 0);
+            const totalB = (participaciones[b.bajo.id] || 0) + (participaciones[b.guitarra.id] || 0);
             return totalA - totalB;
-
         });
 
         const pareja = parejas[0];
@@ -1051,7 +1095,7 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
          */
 
         pianos =
-            ordenarPorParticipacion(pianos);
+            ordenarPorRotacionInstrumento(pianos, "Piano principal");
 
         const piano = pianos[0];
 
@@ -1092,7 +1136,7 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
             );
 
         auxiliares =
-            ordenarPorParticipacion(auxiliares);
+            ordenarPorRotacionInstrumento(auxiliares, "Piano auxiliar");
 
         /*
          * Conservamos aproximadamente la mitad de los
@@ -1130,7 +1174,7 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
             );
 
         coristas =
-            ordenarPorParticipacion(coristas);
+            ordenarPorRotacionInstrumento(coristas, "Coro");
 
         const seleccionCoros =
             coristas.slice(0, 3);
@@ -1439,11 +1483,13 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
             rolBase = "Piano";
         }
 
+        const instrumentosPersona = Array.isArray(
+            integrantes.find(p => p.id === asignacion.integrante_id)?.instrumentos
+        ) ? integrantes.find(p => p.id === asignacion.integrante_id).instrumentos : [];
+
         const tieneElRol =
-            rolesPersona.some(
-                r =>
-                    r.rol === rolBase
-            );
+            rolesPersona.some(r => r.rol === rolBase) ||
+            instrumentosPersona.includes(rolBase);
 
         if (!tieneElRol) {
 
@@ -2448,6 +2494,7 @@ async function abrirReemplazos(asignacionId) {
                     nombre,
                     telefono,
                     instrumento,
+                    instrumentos,
                     nivel,
                     puede_ser_lider,
                     activo
@@ -2553,26 +2600,26 @@ async function abrirReemplazos(asignacionId) {
             // ----------------------------------------------
 
             if (rol === "Batería") {
-                if (persona.instrumento !== "Batería") {
+                if (!(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).includes("Batería")) {
                     return false;
                 }
             }
 
             if (rol === "Bajo") {
-                if (persona.instrumento !== "Bajo") {
+                if (!(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).includes("Bajo")) {
                     return false;
                 }
             }
 
             if (rol === "Guitarra eléctrica") {
-                if (persona.instrumento !== "Guitarra eléctrica") {
+                if (!(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).includes("Guitarra eléctrica")) {
                     return false;
                 }
             }
 
             if (rol === "Piano principal") {
 
-                if (persona.instrumento !== "Piano") {
+                if (!(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).includes("Piano")) {
                     return false;
                 }
 
@@ -2615,7 +2662,7 @@ async function abrirReemplazos(asignacionId) {
             }
 
             if (rol === "Piano auxiliar") {
-                if (persona.instrumento !== "Piano") {
+                if (!(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).includes("Piano")) {
                     return false;
                 }
             }
@@ -2629,7 +2676,7 @@ async function abrirReemplazos(asignacionId) {
 
             if (rol === "Coro") {
 
-                if (persona.instrumento !== "Coro") {
+                if (!(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).includes("Coro")) {
                     return false;
                 }
             }
@@ -2771,7 +2818,7 @@ async function abrirReemplazos(asignacionId) {
                                 </strong>
                     
                                 <span>
-                                    ${persona.instrumento || "Sin instrumento"}
+                                    ${(Array.isArray(persona.instrumentos) && persona.instrumentos.length ? persona.instrumentos : [persona.instrumento]).filter(Boolean).join(", ") || "Sin instrumento"}
                                 </span>
                     
                                 <span class="candidato-nivel">

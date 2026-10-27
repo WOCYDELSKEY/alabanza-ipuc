@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const campos = ["integranteId", "nombre", "telefono", "instrumento", "nivel", "puedeSerLider", "activo"];
+  const campos = ["integranteId", "nombre", "telefono", "nivel", "puedeSerLider", "activo"];
   let integrantes = [];
   let cargando = false;
 
@@ -16,7 +16,12 @@
     $("integranteId").value = persona?.id ?? "";
     $("nombre").value = persona?.nombre ?? "";
     $("telefono").value = persona?.telefono ?? "";
-    $("instrumento").value = persona?.instrumento ?? "";
+    const instrumentosPersona = Array.isArray(persona?.instrumentos) && persona.instrumentos.length
+      ? persona.instrumentos
+      : (persona?.instrumento ? [persona.instrumento] : []);
+    document.querySelectorAll('input[name="instrumentos"]').forEach(check => {
+      check.checked = instrumentosPersona.includes(check.value);
+    });
     $("nivel").value = persona?.nivel ?? "";
     $("puedeSerLider").checked = Boolean(persona?.puede_ser_lider);
     $("activo").checked = persona ? Boolean(persona.activo) : true;
@@ -39,7 +44,7 @@
     const busqueda = $("buscarIntegrante").value.trim().toLocaleLowerCase("es");
     const estado = $("filtroEstado").value;
     const filtrados = integrantes.filter(p => {
-      const texto = `${p.nombre ?? ""} ${p.telefono ?? ""} ${p.instrumento ?? ""} ${p.nivel ?? ""}`.toLocaleLowerCase("es");
+      const texto = `${p.nombre ?? ""} ${p.telefono ?? ""} ${(p.instrumentos || [p.instrumento]).filter(Boolean).join(" ")} ${p.nivel ?? ""}`.toLocaleLowerCase("es");
       return texto.includes(busqueda) && (estado === "todos" || (estado === "activos" && p.activo) || (estado === "inactivos" && !p.activo));
     });
     const tbody = $("listaIntegrantes");
@@ -50,7 +55,7 @@
     tbody.innerHTML = filtrados.map(p => `
       <tr>
         <td><div class="persona-nombre">${escapar(p.nombre || "Sin nombre")}</div><div class="persona-telefono">${escapar(p.telefono || "Sin teléfono registrado")}</div></td>
-        <td>${escapar(p.instrumento || "Sin especificar")}</td>
+        <td>${escapar((Array.isArray(p.instrumentos) && p.instrumentos.length ? p.instrumentos : [p.instrumento]).filter(Boolean).join(", ") || "Sin especificar")}</td>
         <td>${escapar(p.nivel || "Sin especificar")}</td>
         <td><span class="etiqueta ${p.puede_ser_lider ? "etiqueta-lider" : "etiqueta-normal"}">${p.puede_ser_lider ? "Sí" : "No"}</span></td>
         <td><span class="etiqueta ${p.activo ? "etiqueta-activo" : "etiqueta-inactivo"}">${p.activo ? "Activo" : "Inactivo"}</span></td>
@@ -63,7 +68,7 @@
     if (mostrarMensaje) mensaje("Cargando integrantes…");
     try {
       const { data, error } = await supabaseClient.from("integrantes")
-        .select("id, nombre, telefono, instrumento, nivel, puede_ser_lider, activo")
+        .select("id, nombre, telefono, instrumento, instrumentos, nivel, puede_ser_lider, activo")
         .order("nombre", { ascending: true });
       if (error) throw error;
       integrantes = data || [];
@@ -79,10 +84,13 @@
     const id = $("integranteId").value;
     const nombre = $("nombre").value.trim();
     if (!nombre) { mensaje("Escribe el nombre del integrante.", "error"); $("nombre").focus(); return; }
+    const instrumentos = [...document.querySelectorAll('input[name="instrumentos"]:checked')].map(check => check.value);
+    if (!instrumentos.length) { mensaje("Selecciona al menos un instrumento o función.", "error"); return; }
     const payload = {
       nombre,
       telefono: $("telefono").value.trim() || null,
-      instrumento: $("instrumento").value || null,
+      instrumento: instrumentos[0] || null,
+      instrumentos,
       nivel: $("nivel").value || null,
       puede_ser_lider: $("puedeSerLider").checked,
       activo: $("activo").checked
