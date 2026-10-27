@@ -507,7 +507,27 @@ async function generarCronograma(modoSimulacion = false, mesObjetivo = "2026-11"
 
     function puedeSerPrincipal(persona, rol) {
 
-        return (
+        // Si el integrante tiene este instrumento registrado en el módulo
+        // Integrantes, también puede ser considerado para el rol principal.
+        // Esto permite que los músicos multinstrumentistas roten entre batería,
+        // bajo y guitarra, sin tener que duplicar roles en roles_integrantes.
+        const instrumento = rolComoInstrumento(rol);
+        const instrumentosQueAdmiteComoPrincipal = [
+            "Batería",
+            "Bajo",
+            "Guitarra eléctrica"
+        ];
+
+        if (
+            instrumentosQueAdmiteComoPrincipal.includes(instrumento) &&
+            instrumentosDe(persona).includes(instrumento)
+        ) {
+            return true;
+        }
+
+        // Para los demás roles se conserva la configuración explícita existente,
+        // especialmente los permisos de piano principal/auxiliar.
+        return Boolean(
             rolesPorIntegrante[persona.id]
                 ?.some(r =>
                     r.rol === rol &&
@@ -1483,9 +1503,10 @@ function violaReglaNoCoincidencia(integranteA, integranteB) {
             rolBase = "Piano";
         }
 
-        const instrumentosPersona = Array.isArray(
-            integrantes.find(p => p.id === asignacion.integrante_id)?.instrumentos
-        ) ? integrantes.find(p => p.id === asignacion.integrante_id).instrumentos : [];
+        const personaAsignada = integrantes.find(p => p.id === asignacion.integrante_id);
+        const instrumentosPersona = Array.isArray(personaAsignada?.instrumentos) && personaAsignada.instrumentos.length
+            ? personaAsignada.instrumentos
+            : (personaAsignada?.instrumento ? [personaAsignada.instrumento] : []);
 
         const tieneElRol =
             rolesPersona.some(r => r.rol === rolBase) ||
