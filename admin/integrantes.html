@@ -66,11 +66,20 @@
       <label>Nombre completo <span>*</span><input id="nombre" maxlength="120" required placeholder="Nombre y apellidos"></label>
       <label>Teléfono / WhatsApp<input id="telefono" maxlength="30" type="tel" placeholder="Ej. 3001234567"></label>
       <div class="form-fila">
-        <label>Instrumento o función
-          <select id="instrumento" required>
-            <option value="">Selecciona…</option><option value="Batería">Batería</option><option value="Bajo">Bajo</option><option value="Guitarra eléctrica">Guitarra eléctrica</option><option value="Piano">Piano</option><option value="Coro">Coro</option><option value="Voz líder">Voz líder</option><option value="Auxiliar">Auxiliar</option><option value="Otro">Otro</option>
-          </select>
-        </label>
+        <fieldset class="instrumentos-checks">
+          <legend>Instrumentos o funciones que puede desempeñar <span>*</span></legend>
+          <p class="ayuda-instrumentos">Puedes seleccionar varios. El generador no asignará a una persona dos funciones en el mismo servicio.</p>
+          <div class="instrumentos-opciones">
+            <label><input type="checkbox" name="instrumentos" value="Batería"> 🥁 Batería</label>
+            <label><input type="checkbox" name="instrumentos" value="Bajo"> 🎸 Bajo</label>
+            <label><input type="checkbox" name="instrumentos" value="Guitarra eléctrica"> 🎸 Guitarra eléctrica</label>
+            <label><input type="checkbox" name="instrumentos" value="Piano"> 🎹 Piano</label>
+            <label><input type="checkbox" name="instrumentos" value="Coro"> 🎶 Coro</label>
+            <label><input type="checkbox" name="instrumentos" value="Voz líder"> 🎤 Voz líder</label>
+            <label><input type="checkbox" name="instrumentos" value="Auxiliar"> 🧰 Auxiliar</label>
+            <label><input type="checkbox" name="instrumentos" value="Otro"> Otro</label>
+          </div>
+        </fieldset>
         <label>Nivel
           <select id="nivel"><option value="">Sin especificar</option><option value="Principal">Principal</option><option value="Aprendiz">Aprendiz</option><option value="Intermedio">Intermedio</option><option value="Avanzado">Avanzado</option>
           </select>
