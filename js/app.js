@@ -1921,12 +1921,38 @@ async function cargarCronograma(mesObjetivo = null) {
     window.asignacionesCronograma = asignaciones;
     
     // -------------------------------------------------
-    // 3. Construir cronograma
+    // 3. Construir cronograma mostrando solo servicios
+    //    pendientes del mes actual. Los datos completos
+    //    permanecen disponibles para detalle, historial
+    //    y demás módulos de la aplicación.
     // -------------------------------------------------
+
+    const ahora = new Date();
+    const hoyLocal = [
+        ahora.getFullYear(),
+        String(ahora.getMonth() + 1).padStart(2, "0"),
+        String(ahora.getDate()).padStart(2, "0")
+    ].join("-");
+
+    // En el mes actual se ocultan fechas anteriores a hoy.
+    // En meses futuros se muestran todos los servicios.
+    // En meses pasados no quedan servicios pendientes.
+    const esMesActual = mes === hoyLocal.slice(0, 7);
+    const esMesFuturo = mes > hoyLocal.slice(0, 7);
+    const serviciosVisibles = esMesActual
+        ? servicios.filter(servicio => servicio.fecha >= hoyLocal)
+        : (esMesFuturo ? servicios : []);
 
     contenedor.innerHTML = "";
 
-    servicios.forEach(servicio => {
+    if (serviciosVisibles.length === 0) {
+        estado.textContent = esMesFuturo
+            ? "No hay servicios registrados para este mes."
+            : "No hay servicios pendientes para este mes.";
+        return;
+    }
+
+    serviciosVisibles.forEach(servicio => {
 
         const asignacionesServicio =
             asignaciones.filter(
@@ -2056,7 +2082,7 @@ async function cargarCronograma(mesObjetivo = null) {
     });
 
     estado.textContent =
-        `✅ ${servicios.length} servicios cargados correctamente.`;
+        `✅ ${serviciosVisibles.length} servicios pendientes cargados correctamente.`;
 }
 
 
